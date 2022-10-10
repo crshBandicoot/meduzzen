@@ -1,11 +1,12 @@
 from fastapi import FastAPI
+from uvicorn import run as startserver
 
 app = FastAPI()
 
 
 @app.get('/', status_code=200)
 async def root():
-    return {"status": "Working"}
+    return {"status": "Working!"}
 
 
 def health_check():
@@ -13,3 +14,6 @@ def health_check():
 
 
 app.add_api_route('/health', endpoint=health_check)
+
+if __name__ == '__main__':
+    startserver(app, host="0.0.0.0", port=80)
