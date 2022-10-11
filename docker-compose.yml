@@ -19,3 +19,23 @@ services:
         volumes:
             - "/var/run/docker.sock:/var/run/docker.sock"
             - ./src:/app
+  postgres:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      PGDATA: /db/database
+    volumes:
+     - ./db/postgres:/db/postgres
+    ports:
+      - 5432:5432
+  redis:
+    image: redis
+    container_name: redis
+    command: redis-server --requirepass password
+    volumes:
+     - ./db/redis:/db/redis
+    ports:
+      - 6379:6379

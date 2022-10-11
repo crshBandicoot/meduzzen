@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from uvicorn import run as startserver
-
+from db import postgres_engine, redis_engine
 app = FastAPI()
 
 
 @app.get('/', status_code=200)
 async def root():
-    return {"status": "Working!"}
+    return {"status": "Working!", 'postgres': postgres_engine.__str__(), 'redis':redis_engine.__str__()}
 
 
 def health_check():
