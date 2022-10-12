@@ -16,4 +16,4 @@ def health_check():
 app.add_api_route('/health', endpoint=health_check)
 
 if __name__ == '__main__':
-    startserver(app, host="0.0.0.0", port=80)
+    startserver(app, host="0.0.0.0", port=8000)
