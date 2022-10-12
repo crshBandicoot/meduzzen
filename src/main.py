@@ -6,7 +6,7 @@ from db import postgres_engine, redis_engine
 
 origins = [
     "http://localhost",
-    "http://localhost:8080",
+    "http://localhost:8000",
 ]
 
 app = FastAPI()
