@@ -9,6 +9,7 @@ uvicorn = "*"
 sqlalchemy = "*"
 asyncpg = "*"
 aioredis = "*"
+pydantic = "*"
 
 [dev-packages]
 

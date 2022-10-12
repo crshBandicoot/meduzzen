@@ -16,9 +16,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get('/', status_code=200)
 async def root():
-    return {"status": "Working!", 'postgres': postgres_engine.__str__(), 'redis':redis_engine.__str__()}
+    return {"status": "Working!", 'postgres': postgres_engine.__str__(), 'redis': redis_engine.__str__()}
 
 
 def health_check():
