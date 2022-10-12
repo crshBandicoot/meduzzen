@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from uvicorn import run as startserver
 from fastapi.middleware.cors import CORSMiddleware
 from db import postgres_engine, redis_engine
+
+
 origins = [
     "http://localhost",
     "http://localhost:8080",
@@ -16,9 +18,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get('/', status_code=200)
 async def root():
-    return {"status": "Working!", 'postgres': postgres_engine.__str__(), 'redis':redis_engine.__str__()}
+    return {'status': 'Working!', 'postgres': postgres_engine.__str__(), 'redis': redis_engine.__str__()}
 
 
 def health_check():
