@@ -6,19 +6,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./src:/app
-  live-reloader:
-        image: apogiatzis/livereloading
-        container_name: livereloader
-        privileged: true
-        environment:
-            - RELOAD_CONTAINER=fastapiApp
-            - RELOAD_LABEL=fastapiApp
-            - RELOAD_DELAY=3                
-            - RELOAD_DIR=/app
-        volumes:
-            - "/var/run/docker.sock:/var/run/docker.sock"
-            - ./src:/app
+      - ./src:/src
   postgres:
     image: postgres
     container_name: postgres
