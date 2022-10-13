@@ -8,8 +8,9 @@ fastapi = "*"
 uvicorn = "*"
 sqlalchemy = "*"
 asyncpg = "*"
+databases = "*"
 aioredis = "*"
-pydantic = "*"
+pydantic = {extras = ["email"], version = "*"}
 
 [dev-packages]
 

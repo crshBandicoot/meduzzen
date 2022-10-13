@@ -1,13 +1,4 @@
 services:
-  fastapiApp:
-    image: fastapiapp
-    container_name: fastapiApp
-    build: .
-    ports:
-      - 8000:8000
-    volumes:
-      - ./src:/src
-    env_file: .env
   postgres:
     image: postgres
     container_name: postgres
@@ -28,3 +19,12 @@ services:
       - ./db/redis:/db/redis
     ports:
       - 6379:6379
+  fastapiApp:
+    image: fastapiapp
+    container_name: fastapiApp
+    build: .
+    ports:
+      - 8000:8000
+    volumes:
+      - ./app:/app
+    env_file: .env

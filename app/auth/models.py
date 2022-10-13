@@ -1,5 +1,9 @@
-from sqlalchemy import Column, String, Integer
-from app.db import Base
+from sqlalchemy import Column, String, Integer, MetaData
+from .db import Base, postgres_engine
+import asyncio
+
+
+metadata = MetaData()
 
 
 class User(Base):
@@ -10,4 +14,9 @@ class User(Base):
     password = Column('user_password', String)
 
 
-user_table = User.__table__
+async def init_models():
+    async with postgres_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+asyncio.run(init_models())
+
