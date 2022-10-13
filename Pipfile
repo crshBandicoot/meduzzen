@@ -8,9 +8,10 @@ fastapi = "*"
 uvicorn = "*"
 sqlalchemy = "*"
 asyncpg = "*"
-databases = "*"
 aioredis = "*"
 pydantic = {extras = ["email"], version = "*"}
+alembic = "*"
+psycopg2 = "*"
 
 [dev-packages]
 

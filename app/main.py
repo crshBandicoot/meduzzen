@@ -1,13 +1,12 @@
-from sqlalchemy import select
+from os import getcwd
+from sqlalchemy.future import select
 from auth.models import *
 from fastapi import FastAPI, Depends
 from uvicorn import run as startserver
-from auth.db import postgres_engine, redis_engine
-from os import getcwd
+from db import postgres_engine, redis_engine, get_session, init_models
 from config import add_middleware
 from auth.schemas import *
 from auth.crud import *
-from auth.db import get_session
 app = FastAPI()
 add_middleware(app)
 
@@ -20,12 +19,30 @@ async def root():
 @app.get('/users')
 async def get_users(session=Depends(get_session)):
     result = await session.execute(select(User))
+    return result.scalars().all()
+
+
+@app.get('/users/{id}')
+async def get_user(id: int, session=Depends(get_session)):
+    result = await session.get(User, id)
     return result
 
 
 @app.post('/users')
-async def post_users(user: UserSchema, session=Depends(get_session)):
-    create_user(session, user)
+async def post_users(user: UserCreateSchema, session=Depends(get_session)):
+    user = await create_user(session, user)
+    return user
+
+
+@app.post('/users/login')
+async def post_users(user: UserLoginSchema, session=Depends(get_session)):
+    user = await login_user(session, user)
+    return user
+
+
+@app.patch('/users/{id}')
+async def patch_users(id: int, user: UserCreateSchema, session=Depends(get_session)):
+    user = await patch_user(session, user, id)
     return user
 
 
