@@ -12,6 +12,7 @@ aioredis = "*"
 pydantic = {extras = ["email"], version = "*"}
 alembic = "*"
 psycopg2 = "*"
+passlib = "*"
 
 [dev-packages]
 

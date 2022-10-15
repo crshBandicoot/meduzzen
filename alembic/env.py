@@ -1,23 +1,23 @@
 from logging.config import fileConfig
-from os import getenv
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-
+from os import getenv
 from alembic import context
-from auth.models import *
+from app.models.users import Base
 
 config = context.config
-config.set_main_option('sqlalchemy.url', f'postgresql://{getenv("POSTGRES_USER")}:{getenv("POSTGRES_PASSWORD")}@postgres:5432/db')
+config.set_main_option('sqlalchemy.url', f'postgresql://{getenv("POSTGRES_USER")}:{getenv("POSTGRES_PASSWORD")}@{getenv("POSTGRES_URL")}')
+
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-
 
 target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
+
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
