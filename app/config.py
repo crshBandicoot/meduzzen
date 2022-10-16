@@ -1,11 +1,14 @@
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_pagination import add_pagination
+from routers.users import user_router
 
 
-def add_middleware(app):
+def configure(app):
     origins = [
         "http://localhost",
         "http://localhost:8000",
     ]
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -13,3 +16,5 @@ def add_middleware(app):
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    add_pagination(app)
+    app.include_router(user_router)

@@ -6,6 +6,8 @@ from models.users import *
 from schemas.users import *
 from passlib.hash import pbkdf2_sha256 as sha256
 from sqlalchemy.orm import Session
+from fastapi_pagination.ext.async_sqlalchemy import paginate
+from fastapi_pagination import Params
 
 
 async def create_user(session: Session, user: UserCreateSchema) -> User:
@@ -44,14 +46,23 @@ async def patch_user(session: Session, user: UserCreateSchema, id: int) -> User:
     raise HTTPException(404, 'user not found')
 
 
-async def get_users(session: Session) -> list[User]:
-    users = await session.execute(select(User))
-    users = users.scalars().all()
-    return users
+async def get_users(session: Session, page: int) -> list[User]:
+    params = Params(page=page, size=10)
+    users = await paginate(session, select(User), params=params)
+    return users.items
 
 
 async def get_user(session: Session, id: int) -> User:
     user = await session.get(User, id)
     if user:
+        return user
+    raise HTTPException(404, 'user not found')
+
+
+async def delete_user(session: Session, id: int) -> User:
+    user = await session.get(User, id)
+    if user:
+        await session.delete(user)
+        await session.commit()
         return user
     raise HTTPException(404, 'user not found')

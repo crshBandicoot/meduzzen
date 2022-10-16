@@ -1,13 +1,11 @@
 from os import getcwd
 from fastapi import FastAPI
 from uvicorn import run as startserver
-from config import add_middleware
-from routers.users import user_router
+from config import configure
 
 
 app = FastAPI()
-add_middleware(app)
-app.include_router(user_router)
+configure(app)
 
 
 @app.get('/', status_code=200)

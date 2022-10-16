@@ -8,8 +8,8 @@ user_router = APIRouter()
 
 
 @user_router.get('/users')
-async def users(session: Session = Depends(get_session)):
-    result = await get_users(session)
+async def users(session: Session = Depends(get_session), page: int = 1):
+    result = await get_users(session, page)
     return result
 
 
@@ -34,4 +34,10 @@ async def post_users(user: UserLoginSchema, session: Session = Depends(get_sessi
 @user_router.patch('/users/{id}')
 async def patch_users(id: int, user: UserCreateSchema, session: Session = Depends(get_session)):
     user = await patch_user(session, user, id)
+    return user
+
+
+@user_router.delete('/users/{id}')
+async def delete_users(id: int, session: Session = Depends(get_session)):
+    user = await delete_user(session, id)
     return user
