@@ -1,13 +1,4 @@
 services:
-  fastapiApp:
-    image: fastapiapp
-    container_name: fastapiApp
-    build: .
-    ports:
-      - 8000:8000
-    volumes:
-      - ./src:/src
-    env_file: .env
   postgres:
     image: postgres
     container_name: postgres
@@ -19,7 +10,7 @@ services:
     volumes:
       - ./db/postgres:/db/postgres
     ports:
-      - 5432:5432
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
   redis:
     image: redis
     container_name: redis
@@ -27,4 +18,17 @@ services:
     volumes:
       - ./db/redis:/db/redis
     ports:
-      - 6379:6379
+      - ${REDIS_PORT}:${REDIS_PORT}
+  fastapiApp:
+    image: fastapiapp
+    container_name: fastapiApp
+    build: .
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    volumes:
+      - ./app:/app
+      - ./alembic:/alembic
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
