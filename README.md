@@ -1,5 +1,4 @@
 Start app by executing:
     uvicorn src.main:app --reload
 Docker:
-    sudo docker build . -t fastapiapp
-    sudo docker run --mount type=bind,source="$(pwd)"/src,target=/app --name fastapiApp -p 8000:8000 -d fastapiapp
+    sudo sudo docker-compose up --build -d
