@@ -23,14 +23,14 @@ class UserCRUD:
             new_user = User(user=user.username, email=user.email, password=sha256.hash(user.password1), description=user.description)
             self.session.add(new_user)
             await self.session.commit()
-            return new_user
+            return UserSchema(username=new_user.user, description=new_user.description)
 
     async def login_user(self, user: UserLoginSchema) -> User:
         db_user = await self.session.execute(select(User).filter_by(email=user.email))
         db_user = db_user.scalars().first()
         sha256.verify(user.password, db_user.password)
         if sha256.verify(user.password, db_user.password):
-            return db_user
+            return UserSchema(username=db_user.user, description=db_user.description)
         raise HTTPException(404, 'user not found')
 
     async def patch_user(self, user: UserCreateSchema, id: int) -> User:
@@ -44,18 +44,18 @@ class UserCRUD:
             upd_user.email = user.email
             upd_user.password = sha256.hash(user.password1)
             await self.session.commit()
-            return upd_user
+            return UserSchema(username=user.user, description=user.description)
         raise HTTPException(404, 'user not found')
 
     async def get_users(self, page: int) -> list[User]:
         params = Params(page=page, size=10)
         users = await paginate(self.session, select(User), params=params)
-        return users.items
+        return [UserSchema(username=user.user, description=user.description) for user in users.items]
 
     async def get_user(self, id: int) -> User:
         user = await self.session.get(User, id)
         if user:
-            return user
+            return UserSchema(username=user.user, description=user.description)
         raise HTTPException(404, 'user not found')
 
     async def delete_user(self, id: int) -> User:
@@ -63,5 +63,5 @@ class UserCRUD:
         if user:
             await self.session.delete(user)
             await self.session.commit()
-            return user
+            return UserSchema(username=user.user, description=user.description)
         raise HTTPException(404, 'user not found')
