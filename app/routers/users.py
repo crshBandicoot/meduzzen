@@ -10,7 +10,7 @@ from fastapi.security import HTTPBearer
 user_router = APIRouter()
 
 
-@user_router.get('/users')
+@user_router.get('/users', response_model=list[UserSchema])
 async def users(session: Session = Depends(get_session), page: int = 1) -> list[User]:
     result = await UserCRUD(session).get_users(page)
     return result
