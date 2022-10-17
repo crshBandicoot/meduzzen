@@ -14,7 +14,8 @@ alembic = "*"
 psycopg2 = "*"
 passlib = "*"
 fastapi-pagination = "*"
-python-jose = "*"
+aiohttp = "*"
+pyjwt = {extras = ["crypto"], version = "*"}
 
 [dev-packages]
 
