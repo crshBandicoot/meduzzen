@@ -1,4 +1,4 @@
-from os import getcwd
+from os import getcwd, getenv
 from fastapi import FastAPI
 from uvicorn import run as startserver
 from config import configure
@@ -20,4 +20,4 @@ def health_check():
 app.add_api_route('/health', endpoint=health_check)
 
 if __name__ == '__main__':
-    startserver('main:app', host="0.0.0.0", port=8000, reload=True, reload_dirs=[getcwd()])
+    startserver('main:app', host="0.0.0.0", port=int(getenv('APP_PORT')), reload=True, reload_dirs=[getcwd()])
