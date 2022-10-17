@@ -1,4 +1,4 @@
 Start app by executing:
     uvicorn src.main:app --reload
 Docker:
-    sudo docker-compose up --build -d
+    sudo sudo docker-compose up --build -d
