@@ -10,7 +10,7 @@ services:
     volumes:
       - ./db/postgres:/db/postgres
     ports:
-      - 5432:5432
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
   redis:
     image: redis
     container_name: redis
@@ -18,13 +18,13 @@ services:
     volumes:
       - ./db/redis:/db/redis
     ports:
-      - 6379:6379
+      - ${REDIS_PORT}:${REDIS_PORT}
   fastapiApp:
     image: fastapiapp
     container_name: fastapiApp
     build: .
     ports:
-      - 8000:8000
+      - ${APP_PORT}:${APP_PORT}
     volumes:
       - ./app:/app
       - ./alembic:/alembic

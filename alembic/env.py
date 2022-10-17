@@ -7,7 +7,7 @@ from alembic import context
 from app.models.users import Base
 
 config = context.config
-config.set_main_option('sqlalchemy.url', f'postgresql://{getenv("POSTGRES_USER")}:{getenv("POSTGRES_PASSWORD")}@{getenv("POSTGRES_URL")}')
+config.set_main_option('sqlalchemy.url', f'postgresql://{getenv("POSTGRES_USER")}:{getenv("POSTGRES_PASSWORD")}@{getenv("POSTGRES_URL")}:{getenv("POSTGRES_PORT")}/{getenv("POSTGRES_DB")}')
 
 
 if config.config_file_name is not None:
