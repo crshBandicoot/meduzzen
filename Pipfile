@@ -13,6 +13,7 @@ pydantic = {extras = ["email"], version = "*"}
 alembic = "*"
 psycopg2 = "*"
 passlib = "*"
+fastapi-pagination = "*"
 
 [dev-packages]
 
