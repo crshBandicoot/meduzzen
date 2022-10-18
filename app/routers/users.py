@@ -38,13 +38,13 @@ async def log_user(user: UserLoginSchema, session: Session = Depends(get_session
     return token
 
 
-@user_router.patch('/users/{id}', response_model=UserSchema)
-async def patch_users(id: int, user: UserCreateSchema, session: Session = Depends(get_session)) -> UserSchema:
-    user = await UserCRUD(session).patch_user(user, id)
+@user_router.patch('/users', response_model=UserSchema)
+async def patch_users(user: UserAlterSchema, Token: str = Header(), TokenType: str = Header(), session: Session = Depends(get_session)) -> UserSchema:
+    user = await UserCRUD(session).patch_user(user, Token, TokenType)
     return user
 
 
-@user_router.delete('/users/{id}', response_model=UserSchema)
-async def delete_users(id: int, session: Session = Depends(get_session)) -> UserSchema:
-    user = await UserCRUD(session).delete_user(id)
+@user_router.delete('/users', response_model=UserSchema)
+async def delete_users(Token: str = Header(), TokenType: str = Header(), session: Session = Depends(get_session)) -> UserSchema:
+    user = await UserCRUD(session).delete_user(Token, TokenType)
     return user

@@ -30,3 +30,9 @@ class UserSchema(BaseModel):
     id: int
     username: str = Field(min_length=1, max_length=32)
     description: str | None = Field(min_length=1, max_length=4096)
+
+
+class UserAlterSchema(BaseModel):
+    username: str = Field(min_length=1, max_length=32)
+    description: str | None = Field(min_length=1, max_length=4096)
+    password: str = Field(min_length=8, max_length=32)

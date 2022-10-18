@@ -34,19 +34,14 @@ class UserCRUD:
             return create_token({'email': user.email, 'password': user.password})
         raise HTTPException(404, 'user not found')
 
-    async def patch_user(self, user: UserCreateSchema, id: int) -> UserSchema:
-        upd_user = await self.session.get(User, id)
-        db_user = await self.session.execute(select(User).filter(or_(User.email == user.email, User.user == user.username), User.id != id))
-        db_user = db_user.scalars().first()
-        if db_user:
-            raise HTTPException(404, 'username or email already in use')
-        if upd_user:
-            upd_user.user = user.username
-            upd_user.email = user.email
-            upd_user.password = sha256.hash(user.password1)
-            await self.session.commit()
-            return UserSchema(id=user.id, username=user.user, description=user.description)
-        raise HTTPException(404, 'user not found')
+    async def patch_user(self, user: UserAlterSchema, Token: str, TokenType: str,) -> UserSchema:
+        db_user = await self.validate_user(Token, TokenType)
+        db_user = await self.session.get(User, db_user.id)
+        db_user.user = user.username
+        db_user.description = user.description
+        db_user.password = sha256.hash(user.password)
+        await self.session.commit()
+        return UserSchema(id=db_user.id, username=db_user.user, description=db_user.description)
 
     async def get_users(self, page: int) -> list[UserSchema]:
         params = Params(page=page, size=10)
@@ -59,13 +54,12 @@ class UserCRUD:
             return UserSchema(id=user.id, username=user.user, description=user.description)
         raise HTTPException(404, 'user not found')
 
-    async def delete_user(self, id: int) -> UserSchema:
-        user = await self.session.get(User, id)
-        if user:
-            await self.session.delete(user)
-            await self.session.commit()
-            return UserSchema(id=user.id, username=user.user, description=user.description)
-        raise HTTPException(404, 'user not found')
+    async def delete_user(self, Token: str, TokenType: str) -> UserSchema:
+        db_user = await self.validate_user(Token, TokenType)
+        db_user = await self.session.get(User, db_user.id)
+        await self.session.delete(db_user)
+        await self.session.commit()
+        return UserSchema(id=db_user.id, username=db_user.user, description=db_user.description)
 
     async def validate_user(self, Token: str, TokenType: str) -> UserSchema:
         if TokenType == 'app':
