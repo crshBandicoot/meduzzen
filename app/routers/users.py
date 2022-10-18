@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 user_router = APIRouter()
 
 
-@user_router.post('/users/validate')
+@user_router.post('/users/validate', response_model=UserSchema)
 async def validate(Token: str = Header(), TokenType: str = Header(), session: Session = Depends(get_session)) -> UserSchema:
     user = await UserCRUD(session).validate_user(Token, TokenType)
     return user
