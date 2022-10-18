@@ -4,7 +4,6 @@ from services.users import UserCRUD
 from db import get_session
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from fastapi.security import HTTPBearer
 
 user_router = APIRouter()
 
@@ -16,13 +15,13 @@ async def validate(token: TokenSchema, session: Session = Depends(get_session)):
 
 
 @user_router.get('/users', response_model=list[UserSchema])
-async def users(session: Session = Depends(get_session), page: int = 1) -> list[User]:
+async def users(session: Session = Depends(get_session), page: int = 1) -> list[UserSchema]:
     result = await UserCRUD(session).get_users(page)
     return result
 
 
 @user_router.get('/users/{id}', response_model=UserSchema)
-async def user(id: int, session: Session = Depends(get_session)) -> User:
+async def user(id: int, session: Session = Depends(get_session)) -> UserSchema:
     user = await UserCRUD(session).get_user(id)
     return user
 
@@ -40,12 +39,12 @@ async def log_user(user: UserLoginSchema, session: Session = Depends(get_session
 
 
 @user_router.patch('/users/{id}', response_model=UserSchema)
-async def patch_users(id: int, user: UserCreateSchema, session: Session = Depends(get_session)) -> User:
+async def patch_users(id: int, user: UserCreateSchema, session: Session = Depends(get_session)) -> UserSchema:
     user = await UserCRUD(session).patch_user(user, id)
     return user
 
 
 @user_router.delete('/users/{id}', response_model=UserSchema)
-async def delete_users(id: int, session: Session = Depends(get_session)) -> User:
+async def delete_users(id: int, session: Session = Depends(get_session)) -> UserSchema:
     user = await UserCRUD(session).delete_user(id)
     return user
