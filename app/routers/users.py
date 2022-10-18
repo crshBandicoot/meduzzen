@@ -2,16 +2,16 @@ from schemas.users import *
 from models.users import User
 from services.users import UserCRUD
 from db import get_session
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 
 user_router = APIRouter()
 
 
-@user_router.post('/validate')
-async def validate(token: TokenSchema, session: Session = Depends(get_session)):
-    validated = await UserCRUD(session).validate_user(token.token)
-    return validated
+@user_router.post('/users/validate')
+async def validate(Token: str = Header(), TokenType: str = Header(), session: Session = Depends(get_session)) -> UserSchema:
+    user = await UserCRUD(session).validate_user(Token, TokenType)
+    return user
 
 
 @user_router.get('/users', response_model=list[UserSchema])
