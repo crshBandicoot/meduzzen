@@ -14,7 +14,7 @@ class UserCRUD:
     def __init__(self, session: Session):
         self.session = session
 
-    async def create_user(self, user: UserCreateSchema) -> User:
+    async def create_user(self, user: UserCreateSchema) -> UserSchema:
         db_user = await self.session.execute(select(User).filter(or_(User.email == user.email, User.user == user.username)))
         db_user = db_user.scalars().first()
         if db_user:
@@ -25,7 +25,7 @@ class UserCRUD:
             await self.session.commit()
             return UserSchema(id=new_user.id, username=new_user.user, description=new_user.description)
 
-    async def login_user(self, user: UserLoginSchema) -> User:
+    async def login_user(self, user: UserLoginSchema) -> UserSchema:
         db_user = await self.session.execute(select(User).filter_by(email=user.email))
         db_user = db_user.scalars().first()
         sha256.verify(user.password, db_user.password)
@@ -33,7 +33,7 @@ class UserCRUD:
             return UserSchema(id=db_user.id, username=db_user.user, description=db_user.description)
         raise HTTPException(404, 'user not found')
 
-    async def patch_user(self, user: UserCreateSchema, id: int) -> User:
+    async def patch_user(self, user: UserCreateSchema, id: int) -> UserSchema:
         upd_user = await self.session.get(User, id)
         db_user = await self.session.execute(select(User).filter(or_(User.email == user.email, User.user == user.username), User.id != id))
         db_user = db_user.scalars().first()
@@ -47,18 +47,18 @@ class UserCRUD:
             return UserSchema(id=user.id, username=user.user, description=user.description)
         raise HTTPException(404, 'user not found')
 
-    async def get_users(self, page: int) -> list[User]:
+    async def get_users(self, page: int) -> list[UserSchema]:
         params = Params(page=page, size=10)
         users = await paginate(self.session, select(User), params=params)
         return [UserSchema(id=user.id, username=user.user, description=user.description) for user in users.items]
 
-    async def get_user(self, id: int) -> User:
+    async def get_user(self, id: int) -> UserSchema:
         user = await self.session.get(User, id)
         if user:
             return UserSchema(id=user.id, username=user.user, description=user.description)
         raise HTTPException(404, 'user not found')
 
-    async def delete_user(self, id: int) -> User:
+    async def delete_user(self, id: int) -> UserSchema:
         user = await self.session.get(User, id)
         if user:
             await self.session.delete(user)
