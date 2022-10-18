@@ -1,3 +1,4 @@
+from services.services import create_token
 from models.users import *
 from sqlalchemy.future import select
 from sqlalchemy import or_
@@ -8,6 +9,8 @@ from passlib.hash import pbkdf2_sha256 as sha256
 from sqlalchemy.orm import Session
 from fastapi_pagination.ext.async_sqlalchemy import paginate
 from fastapi_pagination import Params
+from jwt import decode
+from os import getenv
 
 
 class UserCRUD:
@@ -25,12 +28,11 @@ class UserCRUD:
             await self.session.commit()
             return UserSchema(username=new_user.user, description=new_user.description)
 
-    async def login_user(self, user: UserLoginSchema) -> User:
+    async def login_user(self, user: UserLoginSchema) -> str:
         db_user = await self.session.execute(select(User).filter_by(email=user.email))
         db_user = db_user.scalars().first()
-        sha256.verify(user.password, db_user.password)
         if sha256.verify(user.password, db_user.password):
-            return UserSchema(username=db_user.user, description=db_user.description)
+            return create_token({'email': user.email})
         raise HTTPException(404, 'user not found')
 
     async def patch_user(self, user: UserCreateSchema, id: int) -> User:
@@ -65,3 +67,16 @@ class UserCRUD:
             await self.session.commit()
             return UserSchema(username=user.user, description=user.description)
         raise HTTPException(404, 'user not found')
+
+    async def validate_user(self, token: str) -> bool:
+        try:
+            data = decode(token, getenv('SECRET_KEY'), ['HS256'])
+        except:
+            raise HTTPException(404, 'token validation error')
+        print(data)
+        email = data['email']
+        user = await self.session.execute(select(User).filter(User.email == email))
+        user = user.scalars().first()
+        if user:
+            return True
+        return False
