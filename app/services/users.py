@@ -3,7 +3,6 @@ from models.users import *
 from sqlalchemy.future import select
 from sqlalchemy import or_
 from fastapi import HTTPException
-from models.users import *
 from schemas.users import *
 from passlib.hash import pbkdf2_sha256 as sha256
 from sqlalchemy.orm import Session

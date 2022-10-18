@@ -29,3 +29,7 @@ class UserLoginSchema(BaseModel):
 class UserSchema(BaseModel):
     username: str = Field(min_length=1, max_length=32)
     description: str | None = Field(min_length=1, max_length=4096)
+
+
+class TokenSchema(BaseModel):
+    token: str

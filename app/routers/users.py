@@ -10,8 +10,8 @@ user_router = APIRouter()
 
 
 @user_router.post('/validate')
-async def validate(token: str, session: Session = Depends(get_session)):
-    validated = await UserCRUD(session).validate_user(token)
+async def validate(token: TokenSchema, session: Session = Depends(get_session)):
+    validated = await UserCRUD(session).validate_user(token.token)
     return validated
 
 
