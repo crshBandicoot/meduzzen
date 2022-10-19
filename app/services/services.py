@@ -1,5 +1,5 @@
 from os import getenv
-from jwt import encode, decode
+from jwt import encode
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
