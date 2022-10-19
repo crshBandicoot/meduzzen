@@ -75,7 +75,7 @@ class UserCRUD:
                 raise HTTPException(404, 'token validation error')
         elif TokenType == 'auth0':
             try:
-                jwks_client = PyJWKClient('https://dev-80odk69r.us.auth0.com/.well-known/jwks.json')
+                jwks_client = PyJWKClient(getenv('AUTH0_PUBLIC_URL'))
                 signing_key = jwks_client.get_signing_key_from_jwt(Token)
                 data = decode(
                     Token,
@@ -83,7 +83,7 @@ class UserCRUD:
                     algorithms=["RS256"],
                     audience=getenv('AUTH0_AUDIENCE')
                 )
-                email = data['https://example.com/email']
+                email = data['user_email']
                 user = await self.session.execute(select(User).filter(User.email == email))
                 user = user.scalars().first()
                 if user:
