@@ -2,7 +2,6 @@ FROM python
 COPY Pipfile .
 COPY Pipfile.lock .
 COPY alembic.ini .
-COPY alembic alembic
 COPY startup.sh .
 RUN pip install pipenv
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy --system

@@ -1,6 +1,6 @@
 from schemas.users import *
 from models.users import User
-from services.users import UserCRUD
+from services.users import UserCRUD, get_user
 from db import get_session
 from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 user_router = APIRouter()
 
 
-@user_router.post('/users/validate', response_model=UserSchema)
-async def validate(Token: str = Header(), TokenType: str = Header(), session: Session = Depends(get_session)) -> UserSchema:
-    user = await UserCRUD(session).validate_user(Token, TokenType)
+@user_router.get('/users/validate', response_model=UserFullSchema)
+async def validate(Token: str = Header(), TokenType: str = Header(), session: Session = Depends(get_session)) -> UserFullSchema:
+    user = await UserCRUD(session).get_or_create_user(Token, TokenType)
     return user
 
 
@@ -27,7 +27,7 @@ async def user(id: int, session: Session = Depends(get_session)) -> UserSchema:
 
 
 @user_router.post('/users', response_model=UserSchema)
-async def add_user(user: UserCreateSchema, session: Session = Depends(get_session)) -> User:
+async def add_user(user: UserCreateSchema, session: Session = Depends(get_session)) -> UserSchema:
     user = await UserCRUD(session).create_user(user)
     return user
 
@@ -38,13 +38,15 @@ async def log_user(user: UserLoginSchema, session: Session = Depends(get_session
     return token
 
 
-@user_router.patch('/users', response_model=UserSchema)
-async def patch_users(user: UserAlterSchema, Token: str = Header(), TokenType: str = Header(), session: Session = Depends(get_session)) -> UserSchema:
-    user = await UserCRUD(session).patch_user(user, Token, TokenType)
+@user_router.patch('/users', response_model=UserFullSchema)
+async def patch_users(user: UserAlterSchema, session: Session = Depends(get_session), Token: str = Header(), TokenType: str = Header()) -> UserFullSchema:
+    user_instance = await get_user(session, Token, TokenType)
+    user = await UserCRUD(session, user_instance).patch_user(user)
     return user
 
 
-@user_router.delete('/users', response_model=UserSchema)
-async def delete_users(Token: str = Header(), TokenType: str = Header(), session: Session = Depends(get_session)) -> UserSchema:
-    user = await UserCRUD(session).delete_user(Token, TokenType)
+@user_router.delete('/users', response_model=UserFullSchema)
+async def delete_users(Token: str = Header(), TokenType: str = Header(), session: Session = Depends(get_session)) -> UserFullSchema:
+    user_instance = await get_user(session, Token, TokenType)
+    user = await UserCRUD(session, user_instance).delete_user()
     return user
