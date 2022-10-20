@@ -70,13 +70,16 @@ class UserCRUD:
                 password = data['password']
                 user = await self.session.execute(select(User).filter(User.email == email))
                 user = user.scalars().first()
-                if user:
-                    if sha256.verify(password, user.password):
-                        return UserFullSchema(id=user.id, username=user.username, email=user.email, description=user.description)
-                else:
-                    raise Exception
             except:
                 raise HTTPException(404, 'token validation error')
+            if user:
+                if sha256.verify(password, user.password):
+                    return UserFullSchema(id=user.id, username=user.username, email=user.email, description=user.description)
+                else:
+                    raise HTTPException(404, 'user validation error')
+            else:
+                raise HTTPException(404, 'user validation error')
+
         elif TokenType == 'auth0':
             try:
                 jwks_client = PyJWKClient(getenv('AUTH0_PUBLIC_URL'))
@@ -109,12 +112,16 @@ async def get_user(session: Session, Token: str, TokenType: str) -> User:
             password = data['password']
             user = await session.execute(select(User).filter(User.email == email))
             user = user.scalars().first()
-            if user:
-                if sha256.verify(password, user.password):
-                    return user
-                raise Exception
         except:
             raise HTTPException(404, 'token validation error')
+        if user:
+            if sha256.verify(password, user.password):
+                return user
+            else:
+                raise HTTPException(404, 'user validation error')
+        else:
+            raise HTTPException(404, 'user validation error')
+
     elif TokenType == 'auth0':
         try:
             jwks_client = PyJWKClient(getenv('AUTH0_PUBLIC_URL'))
@@ -128,9 +135,9 @@ async def get_user(session: Session, Token: str, TokenType: str) -> User:
             email = data['user_email']
             user = await session.execute(select(User).filter(User.email == email))
             user = user.scalars().first()
-            if user:
-                return user
-            else:
-                raise Exception
         except:
             raise HTTPException(404, 'token validation error')
+        if user:
+            return user
+        else:
+            raise HTTPException(404, 'user validation error')
