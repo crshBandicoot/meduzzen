@@ -43,4 +43,3 @@ class UserFullSchema(BaseModel):
     username: str = Field(min_length=1, max_length=32)
     email: EmailStr
     description: str | None = Field(min_length=1, max_length=4096)
-    password: str
