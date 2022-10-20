@@ -43,7 +43,7 @@ class UserCRUD:
         if user.password:
             self.user.password = sha256.hash(user.password)
         await self.session.commit()
-        return UserFullSchema(id=self.user.id, username=self.user.username, email=self.user.email, description=self.user.description, password=self.user.password)
+        return UserFullSchema(id=self.user.id, username=self.user.username, email=self.user.email, description=self.user.description)
 
     async def get_users(self, page: int) -> list[UserSchema]:
         params = Params(page=page, size=10)
@@ -57,7 +57,7 @@ class UserCRUD:
         raise HTTPException(404, 'user not found')
 
     async def delete_user(self) -> UserSchema:
-        return_user = UserFullSchema(id=self.user.id, username=self.user.username, email=self.user.email, description=self.user.description, password=self.user.password)
+        return_user = UserFullSchema(id=self.user.id, username=self.user.username, email=self.user.email, description=self.user.description)
         await self.session.delete(self.user)
         await self.session.commit()
         return return_user
@@ -72,7 +72,7 @@ class UserCRUD:
                 user = user.scalars().first()
                 if user:
                     if sha256.verify(password, user.password):
-                        return UserFullSchema(id=user.id, username=user.username, email=user.email, description=user.description, password=user.password)
+                        return UserFullSchema(id=user.id, username=user.username, email=user.email, description=user.description)
                 else:
                     raise Exception
             except:
@@ -91,12 +91,12 @@ class UserCRUD:
                 user = await self.session.execute(select(User).filter(User.email == email))
                 user = user.scalars().first()
                 if user:
-                    return UserFullSchema(id=user.id, username=user.username, email=user.email, description=user.description, password=user.password)
+                    return UserFullSchema(id=user.id, username=user.username, email=user.email, description=user.description)
                 else:
                     new_user = User(username=email, email=email, password=sha256.hash(getenv('SECRET_KEY')))
                     self.session.add(new_user)
                     await self.session.commit()
-                    return UserFullSchema(id=new_user.id, username=new_user.username, email=new_user.email, description=new_user.description, password=new_user.password)
+                    return UserFullSchema(id=new_user.id, username=new_user.username, email=new_user.email, description=new_user.description)
             except:
                 raise HTTPException(404, 'token validation error')
 
