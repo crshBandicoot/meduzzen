@@ -1,10 +1,10 @@
 from logging.config import fileConfig
-
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from os import getenv
 from alembic import context
-from app.models.users import Base
+from app.models import Base
+
 
 config = context.config
 config.set_main_option('sqlalchemy.url', f'postgresql://{getenv("POSTGRES_USER")}:{getenv("POSTGRES_PASSWORD")}@{getenv("POSTGRES_URL")}:{getenv("POSTGRES_PORT")}/{getenv("POSTGRES_DB")}')
