@@ -20,7 +20,7 @@ class Company(Base):
 
 class Member(Base):
     __tablename__ = 'members'
-    company = Column(ForeignKey('companies.id'), primary_key=True)
+    company = Column(Integer, ForeignKey('companies.id'), primary_key=True)
     user = Column(ForeignKey('users.id'), primary_key=True)
     admin = Column(Boolean, default=False)
 
