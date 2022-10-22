@@ -34,12 +34,6 @@ class MemberSchema(BaseModel):
     admin: bool | None
 
 
-class RequestCreateSchema(BaseModel):
-    user_id: int = Field(gt=0)
-    company_id: int = Field(gt=0)
-    side: bool
-
-
 class RequestSchema(BaseModel):
     user: str = Field(min_length=1, max_length=32)
     company: str = Field(min_length=1, max_length=32)

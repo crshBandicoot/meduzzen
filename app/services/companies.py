@@ -1,11 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_object_session
 from models.companies import Company, Member, Request
-from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema
+from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema
 from sqlalchemy.future import select
 from fastapi import HTTPException, Depends
 from models.users import User
 from services.users import get_user
 from db import get_session
+from fastapi_pagination import Params
+from fastapi_pagination.ext.async_sqlalchemy import paginate
+from sqlalchemy.orm import selectinload
 
 
 class CompanyCRUD:
@@ -48,6 +51,11 @@ class CompanyCRUD:
         else:
             raise HTTPException(404, 'no access')
 
+    async def get_companies(self, page: int) -> list[CompanySchema]:
+        params = Params(page=page, size=10)
+        companies = await paginate(self.session, select(Company).options(selectinload(Company.owner)).filter(Company.visible == True), params=params)
+        return [CompanySchema(id=company.id, name=company.name, owner=company.owner.username, description=company.description, visible=company.visible) for company in companies.items]
+
     async def get_company(self, id: int, user: User) -> CompanySchema:
         company = await self.session.get(Company, id)
         if company:
@@ -74,3 +82,41 @@ async def get_company(id: int, session: AsyncSession = Depends(get_session), use
                 raise HTTPException(404, 'company hidden')
     else:
         raise HTTPException(404, 'company not found')
+
+
+class RequestCRUD:
+    def __init__(self, session: AsyncSession | None = None, user: User | None = None, company: Company | None = None) -> None:
+        self.user = user
+        self.company = company
+        if user:
+            self.session = async_object_session(user)
+        elif company:
+            self.session = async_object_session(company)
+        else:
+            self.session = session
+
+    async def create_request(self, user_id: int, company_id: int, side: bool):
+        db_member = await self.session.get(Member, (company_id, user_id))
+        if db_member:
+            raise HTTPException(404, 'already member of company')
+        db_request = await self.session.execute(select(Request).filter(Request.company_id == company_id, Request.user_id == user_id))
+        db_request = db_request.scalars().first()
+        if db_request:
+            raise HTTPException(404, 'request already submitted')
+
+        user = await self.session.get(User, user_id)
+        if not user:
+            raise HTTPException(404, 'user not found')
+
+        company = await self.session.get(Company, company_id)
+        if not company:
+            raise HTTPException(404, 'company not found')
+
+        request = Request(user_id=user_id, company_id=company_id, side=side)
+        self.session.add(request)
+        await self.session.commit()
+        if request.side:
+            side = 'User requests access to company'
+        else:
+            side = 'Company invites user'
+        return RequestSchema(user=user.username, company=company.name, side=side)

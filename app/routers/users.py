@@ -2,7 +2,7 @@ from schemas.users import UserCreateSchema, UserLoginSchema, UserSchema, UserAlt
 from models.users import User
 from services.users import UserCRUD, get_user, get_or_create_user
 from db import get_session
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 user_router = APIRouter()
@@ -14,7 +14,7 @@ async def validate(user: UserSchema = Depends(get_or_create_user)) -> UserSchema
 
 
 @user_router.get('/users', response_model=list[UserSchema])
-async def users(session: AsyncSession = Depends(get_session), page: int = 1) -> list[UserSchema]:
+async def users(session: AsyncSession = Depends(get_session), page: int = Query(default=1)) -> list[UserSchema]:
     result = await UserCRUD(session=session).get_users(page)
     return result
 
