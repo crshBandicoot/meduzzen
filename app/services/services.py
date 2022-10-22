@@ -1,9 +1,6 @@
 from os import getenv
 from jwt import encode, decode, PyJWKClient
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy.future import select
-from models.users import User
 
 
 def create_token(data: dict) -> str:

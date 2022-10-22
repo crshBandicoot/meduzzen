@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 08fef499513a
+Revision ID: 8fec36981640
 Revises: 
-Create Date: 2022-10-21 18:27:39.804503
+Create Date: 2022-10-21 19:15:20.114084
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '08fef499513a'
+revision = '8fec36981640'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -46,12 +46,12 @@ def upgrade() -> None:
     op.create_index(op.f('ix_companies_name'), 'companies', ['name'], unique=True)
     op.create_index(op.f('ix_companies_owner_id'), 'companies', ['owner_id'], unique=False)
     op.create_table('members',
-    sa.Column('company', sa.Integer(), nullable=False),
-    sa.Column('user', sa.Integer(), nullable=False),
+    sa.Column('company_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('admin', sa.Boolean(), nullable=True),
-    sa.ForeignKeyConstraint(['company'], ['companies.id'], ),
-    sa.ForeignKeyConstraint(['user'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('company', 'user')
+    sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('company_id', 'user_id')
     )
     op.create_table('requests',
     sa.Column('id', sa.Integer(), nullable=False),
