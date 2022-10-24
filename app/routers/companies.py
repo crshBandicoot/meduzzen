@@ -60,7 +60,7 @@ async def remove_user(id: int, user_id: int = Query(), company: Company = Depend
 
 
 @company_router.get('/companies/admin/{id}', response_model=MemberSchema)
-async def remove_user(id: int, user_id: int = Query(), admin: bool = Query(), company: Company = Depends(get_company), user: User = Depends(get_user)) -> MemberSchema:
+async def change_admin(id: int, user_id: int = Query(), admin: bool = Query(), company: Company = Depends(get_company), user: User = Depends(get_user)) -> MemberSchema:
     member = await MemberCRUD(company=company).change_admin(user_id=user_id, cur_user=user, admin=admin)
     return member
 
