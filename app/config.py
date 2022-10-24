@@ -1,6 +1,7 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 from routers.users import user_router
+from routers.companies import company_router
 
 
 def configure(app):
@@ -18,3 +19,4 @@ def configure(app):
     )
     add_pagination(app)
     app.include_router(user_router)
+    app.include_router(company_router)

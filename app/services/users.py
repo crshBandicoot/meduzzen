@@ -1,21 +1,23 @@
 from services.services import create_token, read_token
-from models.users import *
+from models.users import User
 from sqlalchemy.future import select
 from sqlalchemy import or_
 from fastapi import HTTPException, Header, Depends
-from schemas.users import *
+from schemas.users import UserAlterSchema, UserCreateSchema, UserLoginSchema, UserSchema
 from passlib.hash import pbkdf2_sha256 as sha256
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession, async_object_session
 from fastapi_pagination.ext.async_sqlalchemy import paginate
 from fastapi_pagination import Params
-from jwt import PyJWKClient, decode
 from db import get_session
 from os import getenv
 
 
 class UserCRUD:
-    def __init__(self, session: Session, user: User | None = None):
-        self.session = session
+    def __init__(self, session: AsyncSession | None = None, user: User | None = None):
+        if not session:
+            self.session = async_object_session(user)
+        else:
+            self.session = session
         self.user = user
 
     async def create_user(self, user: UserCreateSchema) -> UserSchema:
@@ -68,7 +70,7 @@ class UserCRUD:
         return return_user
 
 
-async def get_or_create_user(session: Session = Depends(get_session), Token: str = Header(), TokenType: str = Header()) -> User:
+async def get_or_create_user(session: AsyncSession = Depends(get_session), Token: str = Header(), TokenType: str = Header()) -> User:
     email = read_token(Token, TokenType)
     user = await session.execute(select(User).filter(User.email == email))
     user = user.scalars().first()
@@ -84,7 +86,7 @@ async def get_or_create_user(session: Session = Depends(get_session), Token: str
             return UserSchema(id=new_user.id, username=new_user.username, email=new_user.email, description=new_user.description)
 
 
-async def get_user(session: Session = Depends(get_session), Token: str = Header(), TokenType: str = Header()) -> User:
+async def get_user(session: AsyncSession = Depends(get_session), Token: str = Header(), TokenType: str = Header()) -> User:
     email = read_token(Token, TokenType)
     user = await session.execute(select(User).filter(User.email == email))
     user = user.scalars().first()

@@ -27,7 +27,7 @@ class UserLoginSchema(BaseModel):
 
 
 class UserSchema(BaseModel):
-    id: int
+    id: int = Field(gt=0)
     username: str = Field(min_length=1, max_length=32)
     email: EmailStr
     description: str | None = Field(min_length=1, max_length=4096)
