@@ -40,9 +40,19 @@ class Request(Base):
 class Quiz(Base):
     __tablename__ = 'quizzes'
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True)
+    name = Column(String)
     description = Column(String)
     frequency = Column(Integer)
     quiz = Column(JSON)
     company_id = Column(Integer, ForeignKey('companies.id'), index=True)
     company = relationship('Company', back_populates='quizzes')
+
+
+class Result(Base):
+    __tablename__ = 'results'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), index=True)
+    quiz_id = Column(Integer, ForeignKey('quizzes.id'), index=True)
+    overall_questions = Column(Integer)
+    correct_answers = Column(Integer)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

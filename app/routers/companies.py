@@ -113,7 +113,7 @@ async def guizzes(session: AsyncSession = Depends(get_session), company: Company
     return quizzes
 
 
-@company_router.get('/companies/take_quiz/{id}', response_model=ResultSchema)
+@company_router.post('/companies/take_quiz/{id}', response_model=ResultSchema)
 async def guizzes(answers: QuizAnswerSchema, quiz_id: int = Query(), session: AsyncSession = Depends(get_session), user: User = Depends(get_user)) -> ResultSchema:
     result = await QuizCRUD(session=session).take_quiz(answers=answers, user=user, quiz_id=quiz_id)
     return result
