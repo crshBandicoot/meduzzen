@@ -292,6 +292,14 @@ class QuizCRUD:
         member = member.scalars().first()
         if not member:
             raise HTTPException('access to quiz denied')
-        correct_answers = quiz.quiz['correct_answers']
-        print(correct_answers)
-        print(answers)
+        correct = quiz.quiz['correct_answers']
+        given = answers.answers
+        if len(correct) != len(given):
+            raise HTTPException(404, 'invalid answers')
+        overall_questions = len(correct)
+        correct_answers = 0
+        for given, correct in zip(given, correct):
+            if given == correct:
+                correct_answers += 1
+
+        return ResultSchema(id=1, user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)

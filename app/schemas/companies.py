@@ -101,4 +101,4 @@ class ResultSchema(BaseModel):
     user_id: int = Field(gt=0)
     quiz_id: int = Field(gt=0)
     overall_questions: int = Field(gt=0)
-    correct_questions: int = Field(ge=0)
+    correct_answers: int = Field(ge=0)
