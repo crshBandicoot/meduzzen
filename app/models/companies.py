@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean, JSON
 from sqlalchemy.sql.functions import func
 from sqlalchemy.orm import relationship
 from db import Base
@@ -12,8 +12,9 @@ class Company(Base):
     owner = relationship('User', back_populates='companies')
     description = Column(String)
     visible = Column(Boolean, default=True)
-    requests = relationship('Request', back_populates='company')
-    members = relationship('Member')
+    requests = relationship('Request', back_populates='company',  cascade='all, delete')
+    quizzes = relationship('Quiz', back_populates='company',  cascade='all, delete')
+    members = relationship('Member', back_populates='company', cascade='all, delete')
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -21,6 +22,7 @@ class Company(Base):
 class Member(Base):
     __tablename__ = 'members'
     company_id = Column(Integer, ForeignKey('companies.id', ondelete='CASCADE'), primary_key=True)
+    company = relationship('Company', back_populates='members')
     user_id = Column(ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
     admin = Column(Boolean, default=False)
 
@@ -33,3 +35,14 @@ class Request(Base):
     company_id = Column(Integer, ForeignKey('companies.id'), index=True)
     company = relationship('Company', back_populates='requests')
     side = Column(Boolean)
+
+
+class Quiz(Base):
+    __tablename__ = 'quizzes'
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True)
+    description = Column(String)
+    frequency = Column(Integer)
+    quiz = Column(JSON)
+    company_id = Column(Integer, ForeignKey('companies.id'), index=True)
+    company = relationship('Company', back_populates='quizzes')

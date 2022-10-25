@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_object_session
-from models.companies import Company, Member, Request
-from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema
+from models.companies import Company, Member, Request, Quiz
+from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema
 from sqlalchemy.future import select
 from fastapi import HTTPException, Depends
 from models.users import User
@@ -223,3 +223,63 @@ class MemberCRUD:
                         raise HTTPException(404, "you can't review other's requests")
             else:
                 raise HTTPException(404, 'invalid response')
+
+
+class QuizCRUD:
+    def __init__(self, session: AsyncSession | None = None) -> None:
+        self.session = session
+
+    async def create_quiz(self, company: Company, user: User, quiz: QuizCreateSchema) -> QuizSchema:
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, user.id)
+            if member.company_id != company.id or member.admin != True:
+                raise HTTPException(404, "you can't add quizzes to other's companies")
+        db_quiz = await self.session.execute(select(Quiz).filter(Quiz.name == quiz.name))
+        db_quiz = db_quiz.scalars().first()
+        if db_quiz:
+            raise HTTPException(404, 'Quiz already in db')
+        db_quiz = Quiz(name=quiz.name, description=quiz.description, frequency=quiz.frequency, quiz={'questions': quiz.questions, 'answer_options': quiz.answer_options, 'correct_answers': quiz.correct_answers}, company_id=company.id)
+        self.session.add(db_quiz)
+        await self.session.commit()
+        return QuizSchema(id=db_quiz.id, name=db_quiz.name, description=db_quiz.description, frequency=db_quiz.frequency, quiz=db_quiz.quiz, company_id=company.id)
+
+    async def patch_quiz(self, company: Company, user: User, quiz: QuizAlterSchema, quiz_id: int) -> QuizSchema:
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, user.id)
+            if member.company_id != company.id or member.admin != True:
+                raise HTTPException(404, "you can't edit other's quizzes")
+
+        db_quiz = await self.session.get(Quiz, quiz_id)
+        if quiz.name:
+            db_quiz.name = quiz.name
+        if quiz.description:
+            db_quiz.description = quiz.description
+        if quiz.frequency:
+            db_quiz.frequency = quiz.frequency
+        if quiz.questions:
+            quiz = {'questions': quiz.questions, 'answer_options': quiz.answer_options, 'correct_answers': quiz.correct_answers}
+            db_quiz.quiz = quiz
+        await self.session.commit()
+        return QuizSchema(id=db_quiz.id, name=db_quiz.name, description=db_quiz.description, frequency=db_quiz.frequency, quiz=db_quiz.quiz, company_id=company.id)
+
+    async def quizzes(self, company: Company, user: User, page: int) -> list[QuizSchema]:
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, user.id)
+            if member.company_id != company.id or member.admin != True:
+                raise HTTPException(404, "you can't see other's quizzes")
+        params = Params(page=page, size=10)
+        quizzes = await paginate(self.session, select(Quiz).filter(Quiz.company_id == company.id), params=params)
+        return [QuizSchema(id=db_quiz.id, name=db_quiz.name, description=db_quiz.description, frequency=db_quiz.frequency, quiz=db_quiz.quiz, company_id=company.id) for db_quiz in quizzes.items]
+
+    async def delete_quiz(self, company: Company, user: User, quiz_id: int) -> QuizSchema:
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, user.id)
+            if member.company_id != company.id or member.admin != True:
+                raise HTTPException(404, "you can't edit other's quizzes")
+        db_quiz = await self.session.get(Quiz, quiz_id)
+        if db_quiz:
+            await self.session.delete(db_quiz)
+            await self.session.commit()
+            return QuizSchema(id=db_quiz.id, name=db_quiz.name, description=db_quiz.description, frequency=db_quiz.frequency, quiz=db_quiz.quiz, company_id=company.id)
+        else:
+            raise HTTPException(404, 'quiz not found')
