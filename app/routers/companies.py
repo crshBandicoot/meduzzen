@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Header, Query
 from db import get_session
 from schemas.users import UserSchema
-from schemas.companies import CompanyCreateSchema,  CompanySchema, MemberSchema, RequestSchema, CompanyAlterSchema
+from schemas.companies import CompanyCreateSchema,  CompanySchema, MemberSchema, RequestSchema, CompanyAlterSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema
 from services.users import get_user
 from models.users import User
-from services.companies import CompanyCRUD, get_company, RequestCRUD, MemberCRUD
-from models.companies import Company, Request, Member
+from services.companies import CompanyCRUD, get_company, RequestCRUD, MemberCRUD, QuizCRUD
+from models.companies import Company, Quiz
 from sqlalchemy.ext.asyncio import async_object_session, AsyncSession
 from sqlalchemy.future import select
 company_router = APIRouter()
@@ -87,3 +87,27 @@ async def company_requests(company: Company = Depends(get_company), page: int = 
 async def user_requests(user: User = Depends(get_user), page: int = Query(default=1)) -> list[RequestSchema]:
     requests = await RequestCRUD(user=user).get_requests(user_id=user.id, page=page)
     return requests
+
+
+@company_router.post('/companies/quiz/{id}', response_model=QuizSchema)
+async def add_quiz(quiz: QuizCreateSchema, company: Company = Depends(get_company), user: User = Depends(get_user), session: AsyncSession = Depends(get_session)) -> QuizSchema:
+    quiz = await QuizCRUD(session=session).create_quiz(company=company, user=user, quiz=quiz)
+    return quiz
+
+
+@company_router.patch('/companies/quiz/{id}', response_model=QuizSchema)
+async def patch_quiz(quiz: QuizAlterSchema, quiz_id: int = Query(), company: Company = Depends(get_company), user: User = Depends(get_user), session: AsyncSession = Depends(get_session)) -> QuizSchema:
+    quiz = await QuizCRUD(session=session).patch_quiz(company=company, user=user, quiz=quiz, quiz_id=quiz_id)
+    return quiz
+
+
+@company_router.delete('/companies/quiz/{id}', response_model=QuizSchema)
+async def delete_quiz(quiz_id: int = Query(), company: Company = Depends(get_company), user: User = Depends(get_user), session: AsyncSession = Depends(get_session)) -> QuizSchema:
+    quiz = await QuizCRUD(session=session).delete_quiz(company=company, user=user, quiz_id=quiz_id)
+    return quiz
+
+
+@company_router.get('/companies/quiz_list/{id}', response_model=list[QuizSchema])
+async def guizzes(session: AsyncSession = Depends(get_session), company: Company = Depends(get_company), user: User = Depends(get_user), page: int = Query(default=1)):
+    quizzes = await QuizCRUD(session=session).quizzes(company=company, user=user, page=page)
+    return quizzes

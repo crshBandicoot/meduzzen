@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 1950ebeb6e9a
+Revision ID: b3a2fa3f6270
 Revises: 
-Create Date: 2022-10-22 12:17:05.602362
+Create Date: 2022-10-24 23:22:43.433058
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '1950ebeb6e9a'
+revision = 'b3a2fa3f6270'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -53,6 +53,19 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('company_id', 'user_id')
     )
+    op.create_table('quizzes',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(), nullable=True),
+    sa.Column('description', sa.String(), nullable=True),
+    sa.Column('frequency', sa.Integer(), nullable=True),
+    sa.Column('quiz', sa.JSON(), nullable=True),
+    sa.Column('company_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
+    )
+    op.create_index(op.f('ix_quizzes_company_id'), 'quizzes', ['company_id'], unique=False)
+    op.create_index(op.f('ix_quizzes_id'), 'quizzes', ['id'], unique=False)
     op.create_table('requests',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
@@ -74,6 +87,9 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_requests_id'), table_name='requests')
     op.drop_index(op.f('ix_requests_company_id'), table_name='requests')
     op.drop_table('requests')
+    op.drop_index(op.f('ix_quizzes_id'), table_name='quizzes')
+    op.drop_index(op.f('ix_quizzes_company_id'), table_name='quizzes')
+    op.drop_table('quizzes')
     op.drop_table('members')
     op.drop_index(op.f('ix_companies_owner_id'), table_name='companies')
     op.drop_index(op.f('ix_companies_name'), table_name='companies')
