@@ -90,3 +90,15 @@ class QuizSchema(BaseModel):
     description: str | None = Field(min_length=1, max_length=4096)
     frequency: int = Field(gt=0)
     quiz: dict
+
+
+class QuizAnswerSchema(BaseModel):
+    answers: list[int]
+
+
+class ResultSchema(BaseModel):
+    id: int = Field(gt=0)
+    user_id: int = Field(gt=0)
+    quiz_id: int = Field(gt=0)
+    overall_questions: int = Field(gt=0)
+    correct_questions: int = Field(ge=0)

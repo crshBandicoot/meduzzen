@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_object_session
 from models.companies import Company, Member, Request, Quiz
-from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema
+from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, ResultSchema, QuizAnswerSchema
 from sqlalchemy.future import select
 from fastapi import HTTPException, Depends
 from models.users import User
@@ -283,3 +283,15 @@ class QuizCRUD:
             return QuizSchema(id=db_quiz.id, name=db_quiz.name, description=db_quiz.description, frequency=db_quiz.frequency, quiz=db_quiz.quiz, company_id=company.id)
         else:
             raise HTTPException(404, 'quiz not found')
+
+    async def take_quiz(self, answers: QuizAnswerSchema, user: User, quiz_id: int):
+        quiz = await self.session.get(Quiz, quiz_id)
+        if not quiz:
+            raise HTTPException(404, 'quiz not found')
+        member = await self.session.execute(select(Member).filter(Member.company_id == quiz.company_id, Member.user_id == user.id))
+        member = member.scalars().first()
+        if not member:
+            raise HTTPException('access to quiz denied')
+        correct_answers = quiz.quiz['correct_answers']
+        print(correct_answers)
+        print(answers)
