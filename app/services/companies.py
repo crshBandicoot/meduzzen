@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_object_session
-from models.companies import Company, Member, Request, Quiz
+from models.companies import Company, Member, Request, Quiz, Result
 from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, ResultSchema, QuizAnswerSchema
 from sqlalchemy.future import select
 from fastapi import HTTPException, Depends
@@ -291,7 +291,7 @@ class QuizCRUD:
         member = await self.session.execute(select(Member).filter(Member.company_id == quiz.company_id, Member.user_id == user.id))
         member = member.scalars().first()
         if not member:
-            raise HTTPException('access to quiz denied')
+            raise HTTPException(404, 'access to quiz denied')
         correct = quiz.quiz['correct_answers']
         given = answers.answers
         if len(correct) != len(given):
@@ -301,5 +301,7 @@ class QuizCRUD:
         for given, correct in zip(given, correct):
             if given == correct:
                 correct_answers += 1
-
-        return ResultSchema(id=1, user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)
+        result = Result(user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)
+        self.session.add(result)
+        await self.session.commit()
+        return ResultSchema(id=result.id, user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)
