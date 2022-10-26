@@ -8,13 +8,13 @@ fastapi = "*"
 uvicorn = "*"
 sqlalchemy = "*"
 asyncpg = "*"
-aioredis = "*"
 pydantic = {extras = ["email"], version = "*"}
 alembic = "*"
 psycopg2 = "*"
 passlib = "*"
 fastapi-pagination = "*"
 pyjwt = {extras = ["crypto"], version = "*"}
+aioredis = "*"
 
 [dev-packages]
 
