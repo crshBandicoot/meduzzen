@@ -11,6 +11,8 @@ from fastapi_pagination.ext.async_sqlalchemy import paginate
 from sqlalchemy.orm import selectinload
 from datetime import datetime
 from pickle import dumps
+from io import StringIO
+from csv import writer, QUOTE_NONNUMERIC
 
 
 class CompanyCRUD:
@@ -309,6 +311,22 @@ class QuizCRUD:
 
         result = Result(user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)
         self.session.add(result)
-        await redis.set(f'{user.id}-{datetime.utcnow()}', dumps({'quiz_id': quiz_id, 'answers': given}), ex=48*3600)
         await self.session.commit()
+        await redis.set(f'{user.id}-{datetime.utcnow()}', dumps({'quiz_id': quiz_id, 'answers': given}), ex=48*3600)
+
         return ResultSchema(id=result.id, user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)
+
+    async def dump_results_user(self, user_id):
+        results = await self.session.execute(select(Result).filter(Result.user_id == user_id))
+        results = results.scalars().all()
+        print(results)
+        csv = StringIO()
+        write = writer(csv, quoting=QUOTE_NONNUMERIC)
+        csvheader = ['user_id', 'quiz_id', 'overall_questions', 'correct_answers']
+        write.writerow(csvheader)
+        for result in results:
+            write.writerow([result.user_id, result.quiz_id, result.overall_questions, result.correct_answers])
+        return iter(csv.getvalue())
+
+    async def dump_answers_user(self, user_id):
+        pass

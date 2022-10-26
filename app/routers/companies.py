@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, Header, Query
 from db import get_session
-from schemas.users import UserSchema
 from schemas.companies import CompanyCreateSchema,  CompanySchema, MemberSchema, RequestSchema, CompanyAlterSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, QuizAnswerSchema, ResultSchema
 from services.users import get_user
 from models.users import User
 from services.companies import CompanyCRUD, get_company, RequestCRUD, MemberCRUD, QuizCRUD
-from models.companies import Company, Quiz
-from sqlalchemy.ext.asyncio import async_object_session, AsyncSession
+from models.companies import Company, Result
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import StreamingResponse
 from sqlalchemy.future import select
+
 company_router = APIRouter()
 
 
@@ -117,3 +118,15 @@ async def guizzes(session: AsyncSession = Depends(get_session), company: Company
 async def guizzes(answers: QuizAnswerSchema, quiz_id: int = Query(), session: AsyncSession = Depends(get_session), user: User = Depends(get_user)) -> ResultSchema:
     result = await QuizCRUD(session=session).take_quiz(answers=answers, user=user, quiz_id=quiz_id)
     return result
+
+
+@company_router.get('/users/dump_results/', response_class=StreamingResponse)
+async def dump_results_user(session: AsyncSession = Depends(get_session), user: User = Depends(get_user)) -> StreamingResponse:
+    results = await QuizCRUD(session=session).dump_results_user(user_id=user.id)
+    return StreamingResponse(results, media_type='text/csv')
+
+
+@company_router.get('/get')
+async def get(session: AsyncSession = Depends(get_session)):
+    results = await session.execute(select(Result))
+    return results.scalars().all()
