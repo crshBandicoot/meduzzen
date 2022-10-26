@@ -5,10 +5,12 @@ from sqlalchemy.future import select
 from fastapi import HTTPException, Depends
 from models.users import User
 from services.users import get_user, UserCRUD
-from db import get_session
+from db import get_session, redis
 from fastapi_pagination import Params
 from fastapi_pagination.ext.async_sqlalchemy import paginate
 from sqlalchemy.orm import selectinload
+from datetime import datetime
+from pickle import dumps
 
 
 class CompanyCRUD:
@@ -296,12 +298,17 @@ class QuizCRUD:
         given = answers.answers
         if len(correct) != len(given):
             raise HTTPException(404, 'invalid answers')
-        overall_questions = len(correct)
+        overall_questions = 0
         correct_answers = 0
         for given, correct in zip(given, correct):
+            if given == 0:
+                continue
+            overall_questions += 1
             if given == correct:
                 correct_answers += 1
+
         result = Result(user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)
         self.session.add(result)
+        await redis.set(f'{user.id}-{datetime.utcnow()}', dumps({'quiz_id': quiz_id, 'answers': given}), ex=48*3600)
         await self.session.commit()
         return ResultSchema(id=result.id, user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)
