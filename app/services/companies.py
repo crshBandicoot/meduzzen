@@ -10,7 +10,10 @@ from fastapi_pagination import Params
 from fastapi_pagination.ext.async_sqlalchemy import paginate
 from sqlalchemy.orm import selectinload
 from datetime import datetime
-from pickle import dumps
+from pickle import dumps, loads
+from io import StringIO
+from csv import writer, QUOTE_NONNUMERIC
+from typing import Iterator
 
 
 class CompanyCRUD:
@@ -286,8 +289,9 @@ class QuizCRUD:
         else:
             raise HTTPException(404, 'quiz not found')
 
-    async def take_quiz(self, answers: QuizAnswerSchema, user: User, quiz_id: int):
+    async def take_quiz(self, answers: QuizAnswerSchema, user: User, quiz_id: int) -> ResultSchema:
         quiz = await self.session.get(Quiz, quiz_id)
+        company = await self.session.get(Company, quiz.company_id)
         if not quiz:
             raise HTTPException(404, 'quiz not found')
         member = await self.session.execute(select(Member).filter(Member.company_id == quiz.company_id, Member.user_id == user.id))
@@ -300,15 +304,91 @@ class QuizCRUD:
             raise HTTPException(404, 'invalid answers')
         overall_questions = 0
         correct_answers = 0
-        for given, correct in zip(given, correct):
-            if given == 0:
+        for answer, correct in zip(given, correct):
+            if answer == 0:
                 continue
             overall_questions += 1
-            if given == correct:
+            if answer == correct:
                 correct_answers += 1
 
-        result = Result(user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)
+        result = Result(user_id=user.id, quiz_id=quiz_id, company_id=company.id, overall_questions=overall_questions, correct_answers=correct_answers)
         self.session.add(result)
-        await redis.set(f'{user.id}-{datetime.utcnow()}', dumps({'quiz_id': quiz_id, 'answers': given}), ex=48*3600)
         await self.session.commit()
-        return ResultSchema(id=result.id, user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)
+        await redis.set(f'{user.id}-{quiz_id}-{company.id}-{datetime.utcnow()}', dumps(given), ex=48*3600)
+        return ResultSchema(id=result.id, user_id=user.id, quiz_id=quiz_id, company_id=company.id, overall_questions=overall_questions, correct_answers=correct_answers)
+
+    async def dump_results_user(self, user_id: int) -> Iterator:
+        results = await self.session.execute(select(Result).filter(Result.user_id == user_id))
+        results = results.scalars().all()
+        csv = StringIO()
+        write = writer(csv, quoting=QUOTE_NONNUMERIC)
+        csvheader = ['user_id', 'quiz_id', 'overall_questions', 'correct_answers']
+        write.writerow(csvheader)
+        for result in results:
+            write.writerow([result.user_id, result.quiz_id, result.overall_questions, result.correct_answers])
+        return iter(csv.getvalue())
+
+    async def dump_answers_user(self, user_id: int) -> Iterator:
+        db_keys = redis.scan_iter(f'{user_id}-*')
+        answers = []
+        keys = []
+        async for key in db_keys:
+            answers.append(loads(await redis.get(key)))
+            keys.append(key)
+        csv = StringIO()
+        write = writer(csv, quoting=QUOTE_NONNUMERIC)
+        csvheader = ['user_id', 'quiz_id', 'answers']
+        write.writerow(csvheader)
+        for key, answer in zip(keys, answers):
+            key = key.decode('utf-8').split('-')
+            write.writerow([key[0], key[1], answer])
+        return iter(csv.getvalue())
+
+    async def dump_results_company(self, user: User, company: Company, user_id: int | None = None, quiz_id: int | None = None) -> Iterator:
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, user.id)
+            if member.company_id != company.id or member.admin != True:
+                raise HTTPException(404, "you can't dump other's results")
+        if user_id and quiz_id:
+            results = await self.session.execute(select(Result).filter(Result.user_id == user_id, Result.quiz_id == quiz_id, Result.company_id == company.id))
+        elif user_id:
+            results = await self.session.execute(select(Result).filter(Result.user_id == user_id, Result.company_id == company.id))
+        elif quiz_id:
+            results = await self.session.execute(select(Result).filter(Result.quiz_id == quiz_id, Result.company_id == company.id))
+        else:
+            results = await self.session.execute(select(Result).filter(Result.company_id == company.id))
+        results = results.scalars().all()
+        csv = StringIO()
+        write = writer(csv, quoting=QUOTE_NONNUMERIC)
+        csvheader = ['user_id', 'quiz_id', 'overall_questions', 'correct_answers']
+        write.writerow(csvheader)
+        for result in results:
+            write.writerow([result.user_id, result.quiz_id, result.overall_questions, result.correct_answers])
+        return iter(csv.getvalue())
+
+    async def dump_answers_company(self, user: User, company: Company, user_id: int | None = None, quiz_id: int | None = None) -> Iterator:
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, user.id)
+            if member.company_id != company.id or member.admin != True:
+                raise HTTPException(404, "you can't dump other's results")
+        if user_id and quiz_id:
+            db_keys = redis.scan_iter(f'{user_id}-{quiz_id}-{company.id}-*')
+        elif user_id:
+            db_keys = redis.scan_iter(f'{user_id}-*-{company.id}-*')
+        elif quiz_id:
+            db_keys = redis.scan_iter(f'*-{quiz_id}-{company.id}-*')
+        else:
+            db_keys = redis.scan_iter(f'*-*-{company.id}-*')
+        answers = []
+        keys = []
+        async for key in db_keys:
+            answers.append(loads(await redis.get(key)))
+            keys.append(key)
+        csv = StringIO()
+        write = writer(csv, quoting=QUOTE_NONNUMERIC)
+        csvheader = ['user_id', 'quiz_id', 'answers']
+        write.writerow(csvheader)
+        for key, answer in zip(keys, answers):
+            key = key.decode('utf-8').split('-')
+            write.writerow([key[0], key[1], answer])
+        return iter(csv.getvalue())
