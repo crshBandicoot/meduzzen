@@ -1,7 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_object_session
 from models.companies import Company, Member, Request, Quiz, Result
-from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, ResultSchema, QuizAnswerSchema
+from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, ResultSchema, QuizAnswerSchema, AverageScoreSchema, LastTimeQuiz
 from sqlalchemy.future import select
+from sqlalchemy import desc
 from fastapi import HTTPException, Depends
 from models.users import User
 from services.users import get_user, UserCRUD
@@ -392,3 +393,37 @@ class QuizCRUD:
             key = key.decode('utf-8').split('-')
             write.writerow([key[0], key[1], answer])
         return iter(csv.getvalue())
+
+    async def average_score_company(self, user: User, company: Company, user_id: int | None = None):
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, user.id)
+            if member.company_id != company.id or member.admin != True:
+                raise HTTPException(404, "you can't see other's results")
+        if user_id:
+            scores = await self.session.execute(select(Result).filter(Result.company_id == company.id, Result.user_id == user_id))
+        else:
+            scores = await self.session.execute(select(Result).filter(Result.company_id == company.id))
+        scores = scores.scalars().all()
+        average_score = {}
+        for score in scores:
+            date = str(score.created_at.date())
+            if date in average_score:
+                overall, correct = average_score[date]
+                average_score[date] = [overall+score.overall_questions, correct+score.correct_answers]
+            else:
+                average_score[date] = [score.overall_questions, score.correct_answers]
+        return [AverageScoreSchema(date=date, average_score=average_score[date][1]/average_score[date][0]) for date in average_score]
+
+    async def last_time_quiz(self, user: User, company: Company):
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, user.id)
+            if member.company_id != company.id or member.admin != True:
+                raise HTTPException(404, "you can't see other's results")
+        members = await self.session.execute(select(Member).filter(Member.company_id == company.id))
+        members = members.scalars().all()
+        results = []
+        for member in members:
+            last_time = await self.session.execute(select(Result).filter(Result.user_id == member.user_id).order_by(desc(Result.created_at)))
+            last_time = last_time.scalars().first()
+            results.append(LastTimeQuiz(user_id=member.user_id, quiz_id=last_time.quiz_id, last_time=str(last_time.created_at.date())))
+        return results

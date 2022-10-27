@@ -1,5 +1,6 @@
 from typing import Literal
 from pydantic import BaseModel, Field, validator
+from datetime import datetime
 
 
 class CompanyCreateSchema(BaseModel):
@@ -103,3 +104,14 @@ class ResultSchema(BaseModel):
     company_id: int = Field(gt=0)
     overall_questions: int = Field(gt=0)
     correct_answers: int = Field(ge=0)
+
+
+class AverageScoreSchema(BaseModel):
+    date: str
+    average_score: float = Field(ge=0)
+
+
+class LastTimeQuiz(BaseModel):
+    user_id: int = Field(gt=0)
+    quiz_id: int = Field(gt=0)
+    last_time: str
