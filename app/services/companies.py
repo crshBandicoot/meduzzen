@@ -404,6 +404,8 @@ class QuizCRUD:
         else:
             scores = await self.session.execute(select(Result).filter(Result.company_id == company.id))
         scores = scores.scalars().all()
+        if not scores:
+            raise HTTPException(404, 'results not found')
         average_score = {}
         for score in scores:
             date = str(score.created_at.date())
@@ -421,19 +423,27 @@ class QuizCRUD:
                 raise HTTPException(404, "you can't see other's results")
         members = await self.session.execute(select(Member).filter(Member.company_id == company.id))
         members = members.scalars().all()
+        if not members:
+            raise HTTPException(404, 'users not found')
         results = []
         for member in members:
             last_time = await self.session.execute(select(Result).filter(Result.user_id == member.user_id).order_by(desc(Result.created_at)))
             last_time = last_time.scalars().first()
+            if not last_time:
+                last_time = 'never'
             results.append(LastTimeQuiz(user_id=member.user_id, quiz_id=last_time.quiz_id, last_time=str(last_time.created_at.date())))
         return results
 
     async def average_score_user(self, user_id: int, quiz_id: int | None) -> AverageScoreUserSchema:
+        if not await self.session.get(User, user_id):
+            raise HTTPException(404, 'user not found')
         if quiz_id:
             scores = await self.session.execute(select(Result).filter(Result.user_id == user_id, Result.quiz_id == quiz_id))
         else:
             scores = await self.session.execute(select(Result).filter(Result.user_id == user_id))
         scores = scores.scalars().all()
+        if not scores:
+            raise HTTPException(404, 'results not found')
         overall = 0
         correct = 0
         for score in scores:
@@ -442,11 +452,13 @@ class QuizCRUD:
         return AverageScoreUserSchema(user_id=user_id, average_score=correct/overall)
 
     async def last_time_quiz_user(self, user_id: int) -> list[LastTimeQuiz]:
-        members = await self.session.execute(select(Result).filter(Result.user_id == user_id).distinct(Result.quiz_id))
-        members = members.scalars().all()
+        quizzes = await self.session.execute(select(Result).filter(Result.user_id == user_id).distinct(Result.quiz_id))
+        quizzes = quizzes.scalars().all()
+        if not quizzes:
+            raise HTTPException(404, 'quizzes not found')
         results = []
-        for member in members:
-            last_time = await self.session.execute(select(Result).filter(Result.user_id == member.user_id).order_by(desc(Result.created_at)))
+        for quiz in quizzes:
+            last_time = await self.session.execute(select(Result).filter(Result.user_id == quiz.user_id).order_by(desc(Result.created_at)))
             last_time = last_time.scalars().first()
-            results.append(LastTimeQuiz(user_id=member.user_id, quiz_id=last_time.quiz_id, last_time=str(last_time.created_at.date())))
+            results.append(LastTimeQuiz(user_id=quiz.user_id, quiz_id=last_time.quiz_id, last_time=str(last_time.created_at.date())))
         return results

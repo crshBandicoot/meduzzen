@@ -157,8 +157,8 @@ async def last_time_quiz(session: AsyncSession = Depends(get_session), user: Use
 
 
 @company_router.get('/users/average_score/', response_model=AverageScoreUserSchema)
-async def average_score_user(session: AsyncSession = Depends(get_session), user: User = Depends(get_user), quiz_id: int = Query(default=None)) -> AverageScoreUserSchema:
-    score = await QuizCRUD(session=session).average_score_user(user_id=user.id, quiz_id=quiz_id)
+async def average_score_user(session: AsyncSession = Depends(get_session), user_id: int = Query(), quiz_id: int = Query(default=None)) -> AverageScoreUserSchema:
+    score = await QuizCRUD(session=session).average_score_user(user_id=user_id, quiz_id=quiz_id)
     return score
 
 
