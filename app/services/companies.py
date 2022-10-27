@@ -1,14 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_object_session
-from models.companies import Company, Member, Request, Quiz
-from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema
+from models.companies import Company, Member, Request, Quiz, Result
+from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, ResultSchema, QuizAnswerSchema
 from sqlalchemy.future import select
 from fastapi import HTTPException, Depends
 from models.users import User
 from services.users import get_user, UserCRUD
-from db import get_session
+from db import get_session, redis
 from fastapi_pagination import Params
 from fastapi_pagination.ext.async_sqlalchemy import paginate
 from sqlalchemy.orm import selectinload
+from datetime import datetime
+from pickle import dumps
 
 
 class CompanyCRUD:
@@ -283,3 +285,30 @@ class QuizCRUD:
             return QuizSchema(id=db_quiz.id, name=db_quiz.name, description=db_quiz.description, frequency=db_quiz.frequency, quiz=db_quiz.quiz, company_id=company.id)
         else:
             raise HTTPException(404, 'quiz not found')
+
+    async def take_quiz(self, answers: QuizAnswerSchema, user: User, quiz_id: int):
+        quiz = await self.session.get(Quiz, quiz_id)
+        if not quiz:
+            raise HTTPException(404, 'quiz not found')
+        member = await self.session.execute(select(Member).filter(Member.company_id == quiz.company_id, Member.user_id == user.id))
+        member = member.scalars().first()
+        if not member:
+            raise HTTPException(404, 'access to quiz denied')
+        correct = quiz.quiz['correct_answers']
+        given = answers.answers
+        if len(correct) != len(given):
+            raise HTTPException(404, 'invalid answers')
+        overall_questions = 0
+        correct_answers = 0
+        for given, correct in zip(given, correct):
+            if given == 0:
+                continue
+            overall_questions += 1
+            if given == correct:
+                correct_answers += 1
+
+        result = Result(user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)
+        self.session.add(result)
+        await redis.set(f'{user.id}-{datetime.utcnow()}', dumps({'quiz_id': quiz_id, 'answers': given}), ex=48*3600)
+        await self.session.commit()
+        return ResultSchema(id=result.id, user_id=user.id, quiz_id=quiz_id, overall_questions=overall_questions, correct_answers=correct_answers)

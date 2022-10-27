@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header, Query
 from db import get_session
 from schemas.users import UserSchema
-from schemas.companies import CompanyCreateSchema,  CompanySchema, MemberSchema, RequestSchema, CompanyAlterSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema
+from schemas.companies import CompanyCreateSchema,  CompanySchema, MemberSchema, RequestSchema, CompanyAlterSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, QuizAnswerSchema, ResultSchema
 from services.users import get_user
 from models.users import User
 from services.companies import CompanyCRUD, get_company, RequestCRUD, MemberCRUD, QuizCRUD
@@ -108,6 +108,12 @@ async def delete_quiz(quiz_id: int = Query(), company: Company = Depends(get_com
 
 
 @company_router.get('/companies/quiz_list/{id}', response_model=list[QuizSchema])
-async def guizzes(session: AsyncSession = Depends(get_session), company: Company = Depends(get_company), user: User = Depends(get_user), page: int = Query(default=1)):
+async def guizzes(session: AsyncSession = Depends(get_session), company: Company = Depends(get_company), user: User = Depends(get_user), page: int = Query(default=1)) -> list[QuizSchema]:
     quizzes = await QuizCRUD(session=session).quizzes(company=company, user=user, page=page)
     return quizzes
+
+
+@company_router.post('/companies/take_quiz/{id}', response_model=ResultSchema)
+async def guizzes(answers: QuizAnswerSchema, quiz_id: int = Query(), session: AsyncSession = Depends(get_session), user: User = Depends(get_user)) -> ResultSchema:
+    result = await QuizCRUD(session=session).take_quiz(answers=answers, user=user, quiz_id=quiz_id)
+    return result
