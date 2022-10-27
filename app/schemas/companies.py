@@ -111,6 +111,11 @@ class AverageScoreSchema(BaseModel):
     average_score: float = Field(ge=0)
 
 
+class AverageScoreUserSchema(BaseModel):
+    user_id: int
+    average_score: float = Field(ge=0)
+
+
 class LastTimeQuiz(BaseModel):
     user_id: int = Field(gt=0)
     quiz_id: int = Field(gt=0)

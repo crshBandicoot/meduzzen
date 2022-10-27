@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Header, Query
 from db import get_session, redis
-from schemas.companies import CompanyCreateSchema,  CompanySchema, MemberSchema, RequestSchema, CompanyAlterSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, QuizAnswerSchema, ResultSchema, AverageScoreSchema, LastTimeQuiz
+from schemas.companies import CompanyCreateSchema,  CompanySchema, MemberSchema, RequestSchema, CompanyAlterSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, QuizAnswerSchema, ResultSchema, AverageScoreSchema, LastTimeQuiz, AverageScoreUserSchema
 from services.users import get_user
 from models.users import User
 from services.companies import CompanyCRUD, get_company, RequestCRUD, MemberCRUD, QuizCRUD
@@ -150,7 +150,19 @@ async def average_score_company(session: AsyncSession = Depends(get_session), us
     return scores
 
 
-@company_router.get('/companies/last_time_quiz/{id}')
+@company_router.get('/companies/last_time_quiz/{id}', response_model=list[LastTimeQuiz])
 async def last_time_quiz(session: AsyncSession = Depends(get_session), user: User = Depends(get_user), company: Company = Depends(get_company)) -> list[LastTimeQuiz]:
     last_time = await QuizCRUD(session=session).last_time_quiz(user=user, company=company)
+    return last_time
+
+
+@company_router.get('/users/average_score/', response_model=AverageScoreUserSchema)
+async def average_score_user(session: AsyncSession = Depends(get_session), user: User = Depends(get_user), quiz_id: int = Query(default=None)) -> AverageScoreUserSchema:
+    score = await QuizCRUD(session=session).average_score_user(user_id=user.id, quiz_id=quiz_id)
+    return score
+
+
+@company_router.get('/users/last_time_quiz/', response_model=list[LastTimeQuiz])
+async def last_time_quiz_user(session: AsyncSession = Depends(get_session), user: User = Depends(get_user)) -> list[LastTimeQuiz]:
+    last_time = await QuizCRUD(session=session).last_time_quiz_user(user_id=user.id)
     return last_time
