@@ -14,11 +14,11 @@ from datetime import datetime
 from pickle import dumps, loads
 from io import StringIO
 from csv import writer, QUOTE_NONNUMERIC
-from typing import Iterator
+from typing import Iterator, Optional
 
 
 class CompanyCRUD:
-    def __init__(self, session: AsyncSession | None = None, company: Company | None = None):
+    def __init__(self, session: Optional[AsyncSession] = None, company: Optional[Company] = None):
         if not session:
             self.session = async_object_session(company)
         else:
@@ -91,7 +91,7 @@ async def get_company(id: int, session: AsyncSession = Depends(get_session), use
 
 
 class RequestCRUD:
-    def __init__(self, session: AsyncSession | None = None, user: User | None = None, company: Company | None = None):
+    def __init__(self, session: Optional[AsyncSession] = None, user: Optional[User] = None, company: Optional[Company] = None):
         self.user = user
         self.company = company
         if user:
@@ -107,7 +107,7 @@ class RequestCRUD:
         else:
             return 'Company invites user'
 
-    async def get_requests(self,  page: int, cur_user: User | None = None, user_id: int | None = None, company_id: Company | None = None) -> list[RequestSchema]:
+    async def get_requests(self,  page: int, cur_user: Optional[User] = None, user_id: Optional[int] = None, company_id: Optional[Company] = None) -> list[RequestSchema]:
         params = Params(page=page, size=10)
         if user_id:
             requests = await paginate(self.session, select(Request).options(selectinload(Request.user)).options(selectinload(Request.company)).filter(Request.user_id == user_id), params=params)
@@ -145,7 +145,7 @@ class RequestCRUD:
 
 
 class MemberCRUD:
-    def __init__(self, session: AsyncSession | None = None, user: User | None = None, company: Company | None = None) -> None:
+    def __init__(self, session: Optional[AsyncSession] = None, user: Optional[User] = None, company: Optional[Company] = None) -> None:
         self.user = user
         self.company = company
         if user:
@@ -232,7 +232,7 @@ class MemberCRUD:
 
 
 class QuizCRUD:
-    def __init__(self, session: AsyncSession | None = None) -> None:
+    def __init__(self, session: Optional[AsyncSession] = None) -> None:
         self.session = session
 
     async def create_quiz(self, company: Company, user: User, quiz: QuizCreateSchema) -> QuizSchema:
@@ -345,7 +345,7 @@ class QuizCRUD:
             write.writerow([key[0], key[1], answer])
         return iter(csv.getvalue())
 
-    async def dump_results_company(self, user: User, company: Company, user_id: int | None = None, quiz_id: int | None = None) -> Iterator:
+    async def dump_results_company(self, user: User, company: Company, user_id: Optional[int] = None, quiz_id: Optional[int] = None) -> Iterator:
         if company.owner_id != user.id:
             member = await self.session.get(Member, user.id)
             if member.company_id != company.id or member.admin != True:
@@ -367,7 +367,7 @@ class QuizCRUD:
             write.writerow([result.user_id, result.quiz_id, result.overall_questions, result.correct_answers])
         return iter(csv.getvalue())
 
-    async def dump_answers_company(self, user: User, company: Company, user_id: int | None = None, quiz_id: int | None = None) -> Iterator:
+    async def dump_answers_company(self, user: User, company: Company, user_id: Optional[int] = None, quiz_id: Optional[int] = None) -> Iterator:
         if company.owner_id != user.id:
             member = await self.session.get(Member, user.id)
             if member.company_id != company.id or member.admin != True:
@@ -394,7 +394,7 @@ class QuizCRUD:
             write.writerow([key[0], key[1], answer])
         return iter(csv.getvalue())
 
-    async def average_score_company(self, user: User, company: Company, user_id: int | None) -> list[AverageScoreSchema]:
+    async def average_score_company(self, user: User, company: Company, user_id: Optional[int]) -> list[AverageScoreSchema]:
         if company.owner_id != user.id:
             member = await self.session.get(Member, user.id)
             if member.company_id != company.id or member.admin != True:
@@ -434,7 +434,7 @@ class QuizCRUD:
             results.append(LastTimeQuiz(user_id=member.user_id, quiz_id=last_time.quiz_id, last_time=str(last_time.created_at.date())))
         return results
 
-    async def average_score_user(self, user_id: int, quiz_id: int | None) -> AverageScoreUserSchema:
+    async def average_score_user(self, user_id: int, quiz_id: Optional[int]) -> AverageScoreUserSchema:
         if not await self.session.get(User, user_id):
             raise HTTPException(404, 'user not found')
         if quiz_id:
