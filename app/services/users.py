@@ -10,10 +10,11 @@ from fastapi_pagination.ext.async_sqlalchemy import paginate
 from fastapi_pagination import Params
 from db import get_session
 from os import getenv
+from typing import Optional
 
 
 class UserCRUD:
-    def __init__(self, session: AsyncSession | None = None, user: User | None = None):
+    def __init__(self, session: Optional[AsyncSession] = None, user: Optional[User] = None):
         if not session:
             self.session = async_object_session(user)
         else:

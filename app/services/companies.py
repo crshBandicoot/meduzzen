@@ -1,7 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_object_session
 from models.companies import Company, Member, Request, Quiz, Result
-from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, ResultSchema, QuizAnswerSchema
+from schemas.companies import CompanyCreateSchema, CompanySchema, CompanyAlterSchema, RequestSchema, MemberSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, ResultSchema, QuizAnswerSchema, AverageScoreSchema, LastTimeQuiz, AverageScoreUserSchema
 from sqlalchemy.future import select
+from sqlalchemy import desc
 from fastapi import HTTPException, Depends
 from models.users import User
 from services.users import get_user, UserCRUD
@@ -13,11 +14,11 @@ from datetime import datetime
 from pickle import dumps, loads
 from io import StringIO
 from csv import writer, QUOTE_NONNUMERIC
-from typing import Iterator
+from typing import Iterator, Optional
 
 
 class CompanyCRUD:
-    def __init__(self, session: AsyncSession | None = None, company: Company | None = None):
+    def __init__(self, session: Optional[AsyncSession] = None, company: Optional[Company] = None):
         if not session:
             self.session = async_object_session(company)
         else:
@@ -90,7 +91,7 @@ async def get_company(id: int, session: AsyncSession = Depends(get_session), use
 
 
 class RequestCRUD:
-    def __init__(self, session: AsyncSession | None = None, user: User | None = None, company: Company | None = None):
+    def __init__(self, session: Optional[AsyncSession] = None, user: Optional[User] = None, company: Optional[Company] = None):
         self.user = user
         self.company = company
         if user:
@@ -106,7 +107,7 @@ class RequestCRUD:
         else:
             return 'Company invites user'
 
-    async def get_requests(self,  page: int, cur_user: User | None = None, user_id: int | None = None, company_id: Company | None = None) -> list[RequestSchema]:
+    async def get_requests(self,  page: int, cur_user: Optional[User] = None, user_id: Optional[int] = None, company_id: Optional[Company] = None) -> list[RequestSchema]:
         params = Params(page=page, size=10)
         if user_id:
             requests = await paginate(self.session, select(Request).options(selectinload(Request.user)).options(selectinload(Request.company)).filter(Request.user_id == user_id), params=params)
@@ -144,7 +145,7 @@ class RequestCRUD:
 
 
 class MemberCRUD:
-    def __init__(self, session: AsyncSession | None = None, user: User | None = None, company: Company | None = None) -> None:
+    def __init__(self, session: Optional[AsyncSession] = None, user: Optional[User] = None, company: Optional[Company] = None) -> None:
         self.user = user
         self.company = company
         if user:
@@ -231,7 +232,7 @@ class MemberCRUD:
 
 
 class QuizCRUD:
-    def __init__(self, session: AsyncSession | None = None) -> None:
+    def __init__(self, session: Optional[AsyncSession] = None) -> None:
         self.session = session
 
     async def create_quiz(self, company: Company, user: User, quiz: QuizCreateSchema) -> QuizSchema:
@@ -344,7 +345,7 @@ class QuizCRUD:
             write.writerow([key[0], key[1], answer])
         return iter(csv.getvalue())
 
-    async def dump_results_company(self, user: User, company: Company, user_id: int | None = None, quiz_id: int | None = None) -> Iterator:
+    async def dump_results_company(self, user: User, company: Company, user_id: Optional[int] = None, quiz_id: Optional[int] = None) -> Iterator:
         if company.owner_id != user.id:
             member = await self.session.get(Member, user.id)
             if member.company_id != company.id or member.admin != True:
@@ -366,7 +367,7 @@ class QuizCRUD:
             write.writerow([result.user_id, result.quiz_id, result.overall_questions, result.correct_answers])
         return iter(csv.getvalue())
 
-    async def dump_answers_company(self, user: User, company: Company, user_id: int | None = None, quiz_id: int | None = None) -> Iterator:
+    async def dump_answers_company(self, user: User, company: Company, user_id: Optional[int] = None, quiz_id: Optional[int] = None) -> Iterator:
         if company.owner_id != user.id:
             member = await self.session.get(Member, user.id)
             if member.company_id != company.id or member.admin != True:
@@ -392,3 +393,72 @@ class QuizCRUD:
             key = key.decode('utf-8').split('-')
             write.writerow([key[0], key[1], answer])
         return iter(csv.getvalue())
+
+    async def average_score_company(self, user: User, company: Company, user_id: Optional[int]) -> list[AverageScoreSchema]:
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, user.id)
+            if member.company_id != company.id or member.admin != True:
+                raise HTTPException(404, "you can't see other's results")
+        if user_id:
+            scores = await self.session.execute(select(Result).filter(Result.company_id == company.id, Result.user_id == user_id))
+        else:
+            scores = await self.session.execute(select(Result).filter(Result.company_id == company.id))
+        scores = scores.scalars().all()
+        if not scores:
+            raise HTTPException(404, 'results not found')
+        average_score = {}
+        for score in scores:
+            date = str(score.created_at.date())
+            if date in average_score:
+                overall, correct = average_score[date]
+                average_score[date] = [overall+score.overall_questions, correct+score.correct_answers]
+            else:
+                average_score[date] = [score.overall_questions, score.correct_answers]
+        return [AverageScoreSchema(date=date, average_score=average_score[date][1]/average_score[date][0]) for date in average_score]
+
+    async def last_time_quiz(self, user: User, company: Company) -> list[LastTimeQuiz]:
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, user.id)
+            if member.company_id != company.id or member.admin != True:
+                raise HTTPException(404, "you can't see other's results")
+        members = await self.session.execute(select(Member).filter(Member.company_id == company.id))
+        members = members.scalars().all()
+        if not members:
+            raise HTTPException(404, 'users not found')
+        results = []
+        for member in members:
+            last_time = await self.session.execute(select(Result).filter(Result.user_id == member.user_id).order_by(desc(Result.created_at)))
+            last_time = last_time.scalars().first()
+            if not last_time:
+                last_time = 'never'
+            results.append(LastTimeQuiz(user_id=member.user_id, quiz_id=last_time.quiz_id, last_time=str(last_time.created_at.date())))
+        return results
+
+    async def average_score_user(self, user_id: int, quiz_id: Optional[int]) -> AverageScoreUserSchema:
+        if not await self.session.get(User, user_id):
+            raise HTTPException(404, 'user not found')
+        if quiz_id:
+            scores = await self.session.execute(select(Result).filter(Result.user_id == user_id, Result.quiz_id == quiz_id))
+        else:
+            scores = await self.session.execute(select(Result).filter(Result.user_id == user_id))
+        scores = scores.scalars().all()
+        if not scores:
+            raise HTTPException(404, 'results not found')
+        overall = 0
+        correct = 0
+        for score in scores:
+            overall += score.overall_questions
+            correct += score.correct_answers
+        return AverageScoreUserSchema(user_id=user_id, average_score=correct/overall)
+
+    async def last_time_quiz_user(self, user_id: int) -> list[LastTimeQuiz]:
+        quizzes = await self.session.execute(select(Result).filter(Result.user_id == user_id).distinct(Result.quiz_id))
+        quizzes = quizzes.scalars().all()
+        if not quizzes:
+            raise HTTPException(404, 'quizzes not found')
+        results = []
+        for quiz in quizzes:
+            last_time = await self.session.execute(select(Result).filter(Result.user_id == quiz.user_id).order_by(desc(Result.created_at)))
+            last_time = last_time.scalars().first()
+            results.append(LastTimeQuiz(user_id=quiz.user_id, quiz_id=last_time.quiz_id, last_time=str(last_time.created_at.date())))
+        return results

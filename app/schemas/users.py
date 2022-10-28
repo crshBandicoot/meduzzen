@@ -1,10 +1,10 @@
 from pydantic import BaseModel, validator, Field, EmailStr
-
+from typing import Optional
 
 class UserCreateSchema(BaseModel):
     username: str = Field(min_length=1, max_length=32)
     email: EmailStr
-    description: str | None = Field(min_length=1, max_length=4096)
+    description: Optional[str] = Field(min_length=1, max_length=4096)
     password1: str = Field(min_length=8, max_length=32)
     password2: str = Field(min_length=8, max_length=32)
 
@@ -30,10 +30,10 @@ class UserSchema(BaseModel):
     id: int = Field(gt=0)
     username: str = Field(min_length=1, max_length=32)
     email: EmailStr
-    description: str | None = Field(min_length=1, max_length=4096)
+    description: Optional[str] = Field(min_length=1, max_length=4096)
 
 
 class UserAlterSchema(BaseModel):
-    username: str | None = Field(min_length=1, max_length=32)
-    description: str | None = Field(min_length=1, max_length=4096)
-    password: str | None = Field(min_length=8, max_length=32)
+    username: Optional[str] = Field(min_length=1, max_length=32)
+    description: Optional[str] = Field(min_length=1, max_length=4096)
+    password: Optional[str] = Field(min_length=8, max_length=32)
