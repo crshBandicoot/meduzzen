@@ -40,6 +40,7 @@ services:
     volumes:
       - ./app:/app
       - ./alembic:/alembic
+      - ./tests:/tests
     env_file: .env
     healthcheck:
       test: curl localhost:8000

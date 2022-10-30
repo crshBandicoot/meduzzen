@@ -75,6 +75,7 @@ async def get_or_create_user(session: AsyncSession = Depends(get_session), Token
     email = read_token(Token, TokenType)
     user = await session.execute(select(User).filter(User.email == email))
     user = user.scalars().first()
+
     if user:
         return UserSchema(id=user.id, username=user.username, email=user.email, description=user.description)
     else:

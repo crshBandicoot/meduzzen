@@ -22,7 +22,7 @@ def read_token(Token: str, TokenType: str) -> str:
             data = decode(
                 Token,
                 signing_key.key,
-                algorithms=["RS256"],
+                algorithms=['RS256'],
                 audience=getenv('AUTH0_AUDIENCE'))
             email = data['user_email']
             return email

@@ -13,8 +13,12 @@ alembic = "*"
 psycopg2 = "*"
 passlib = "*"
 fastapi-pagination = "*"
-pyjwt = {extras = ["crypto"], version = "*"}
 aioredis = "*"
+pytest = "*"
+requests = "*"
+httpx = "*"
+anyio = "*"
+pyjwt = {extras = ["crypto"], version = "*"}
 
 [dev-packages]
 
