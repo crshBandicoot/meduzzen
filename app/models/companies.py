@@ -12,8 +12,8 @@ class Company(Base):
     owner = relationship('User', back_populates='companies')
     description = Column(String)
     visible = Column(Boolean, default=True)
-    requests = relationship('Request', back_populates='company',  cascade='all, delete')
-    quizzes = relationship('Quiz', back_populates='company',  cascade='all, delete')
+    requests = relationship('Request', back_populates='company', cascade='all, delete')
+    quizzes = relationship('Quiz', back_populates='company', cascade='all, delete')
     members = relationship('Member', back_populates='company', cascade='all, delete')
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -51,9 +51,9 @@ class Quiz(Base):
 class Result(Base):
     __tablename__ = 'results'
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'), index=True)
-    quiz_id = Column(Integer, ForeignKey('quizzes.id'), index=True)
-    company_id = Column(Integer, ForeignKey('companies.id'), index=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    quiz_id = Column(Integer, ForeignKey('quizzes.id', ondelete='CASCADE'), index=True)
+    company_id = Column(Integer, ForeignKey('companies.id', ondelete='CASCADE'), index=True)
     overall_questions = Column(Integer)
     correct_answers = Column(Integer)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -1,4 +1,3 @@
-from main import app
 from schemas.users import UserCreateSchema, UserSchema, UserLoginSchema, UserAlterSchema
 from httpx import AsyncClient
 from pytest import mark

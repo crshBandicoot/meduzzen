@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy import desc
 from fastapi import HTTPException, Depends
 from models.users import User
-from services.users import get_user, UserCRUD
+from services.users import get_user
 from db import get_session, redis
 from fastapi_pagination import Params
 from fastapi_pagination.ext.async_sqlalchemy import paginate
@@ -215,7 +215,8 @@ class MemberCRUD:
                         self.session.add(member)
                         await self.session.delete(request)
                         await self.session.commit()
-                        return MemberSchema(company=company.name, user=self.user.username, admin=False)
+                        user = await self.session.get(User, request.user_id)
+                        return MemberSchema(company=company.name, user=user.username, admin=False)
                     else:
                         raise HTTPException(404, "you can't review other's requests")
                 elif request.side == False:

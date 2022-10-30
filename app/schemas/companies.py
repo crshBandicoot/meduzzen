@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from typing import Optional
 
+
 class CompanyCreateSchema(BaseModel):
     name: str = Field(min_length=1, max_length=32)
     description: Optional[str] = Field(min_length=1, max_length=4096)
@@ -69,6 +70,8 @@ class QuizAlterSchema(BaseModel):
 
     @validator('correct_answers')
     def validate_quiz(cls, value, values):
+        if not value and not values['questions'] and not values['answer_options']:
+            return value
         if not value or not values['questions'] or not values['answer_options']:
             if value != values['questions'] != values['answer_options'] != None:
                 raise ValueError('Invalid quiz!')
