@@ -4,8 +4,6 @@ from services.services import create_token
 from schemas_mock import *
 
 
-
-
 @mark.anyio
 async def test_healthcheck(client: AsyncClient, refresh_db):
     response = await client.get('/')
@@ -119,3 +117,10 @@ async def test_user_delete(client: AsyncClient):
     response = await client.get('/users/2')
     assert response.status_code == 404
     assert response.json() == {'detail': 'user not found'}
+
+
+@mark.anyio
+async def test_healthcheck_end(client: AsyncClient, clear_db):
+    response = await client.get('/')
+    assert response.status_code == 200
+    assert response.json() == {'status': 'Working!'}

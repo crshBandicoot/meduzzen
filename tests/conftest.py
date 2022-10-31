@@ -23,3 +23,11 @@ async def refresh_db():
         await conn.run_sync(Base.metadata.create_all)
     async for key in redis.scan_iter():
         await redis.delete(key)
+
+
+@pytest.fixture(scope='module')
+async def clear_db():
+    async with postgres_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    async for key in redis.scan_iter():
+        await redis.delete(key)

@@ -5,6 +5,7 @@ from io import StringIO
 from datetime import datetime
 from schemas_mock import *
 
+
 @mark.anyio
 async def test_healthcheck(client: AsyncClient, refresh_db):
     response = await client.get('/')
@@ -252,3 +253,10 @@ async def test_delete_quiz(client: AsyncClient):
     response = await client.delete('/companies/quiz/1?quiz_id=1', headers=dict(Token=user1_token, TokenType='app'))
     assert response.status_code == 200
     assert response.json() == QuizSchema(id=1, name='new name', description=quiz.description, frequency=3, quiz={'questions': quiz.questions, 'answer_options': quiz.answer_options, 'correct_answers': quiz.correct_answers}).dict()
+
+
+@mark.anyio
+async def test_healthcheck_end(client: AsyncClient, clear_db):
+    response = await client.get('/')
+    assert response.status_code == 200
+    assert response.json() == {'status': 'Working!'}
