@@ -1,16 +1,9 @@
-from schemas.users import UserCreateSchema, UserSchema, UserLoginSchema, UserAlterSchema
 from httpx import AsyncClient
 from pytest import mark
 from services.services import create_token
+from schemas_mock import *
 
-user1 = UserCreateSchema(username='user1', email='mail1@mail.com',  description='first', password1='password1', password2='password1')
-user2 = UserCreateSchema(username='user2', email='mail2@mail.com',  description='second', password1='password2', password2='password2')
-user3 = UserCreateSchema(username='user3', email='mail3@mail.com',  description='third', password1='password3', password2='password3')
-db_user1 = UserSchema(id=1, username='user1', email='mail1@mail.com', description='first')
-db_user2 = UserSchema(id=2, username='user2', email='mail2@mail.com', description='second')
-db_user3 = UserSchema(id=3, username='user3', email='mail3@mail.com', description='third')
-login_user1 = UserLoginSchema(email='mail1@mail.com', password='password1')
-login_user2 = UserLoginSchema(email='mail2@mail.com', password='password2')
+
 
 
 @mark.anyio
