@@ -63,6 +63,5 @@ jobs:
           curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
           sudo docker context create ecs myecs <<< env
           docker context use myecs
-          docker build -t fastapiapp -f Dockerfile.Deploy .
           docker compose -f 'deploy.yml' up
           docker compose ps
