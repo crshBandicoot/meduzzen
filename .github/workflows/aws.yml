@@ -47,4 +47,4 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
           docker context create ecs myecs <<< env
-          docker context use myecscontext
+          docker context use myecs
