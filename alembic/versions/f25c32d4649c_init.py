@@ -1,8 +1,8 @@
 """init
 
-Revision ID: d57421fc01fd
+Revision ID: f25c32d4649c
 Revises: 
-Create Date: 2022-10-26 19:29:20.513825
+Create Date: 2022-10-30 21:22:13.577076
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'd57421fc01fd'
+revision = 'f25c32d4649c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -85,9 +85,9 @@ def upgrade() -> None:
     sa.Column('overall_questions', sa.Integer(), nullable=True),
     sa.Column('correct_answers', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ),
-    sa.ForeignKeyConstraint(['quiz_id'], ['quizzes.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['company_id'], ['companies.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['quiz_id'], ['quizzes.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_results_company_id'), 'results', ['company_id'], unique=False)

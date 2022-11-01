@@ -1,13 +1,12 @@
-from fastapi import APIRouter, Depends, Header, Query
-from db import get_session, redis
+from fastapi import APIRouter, Depends, Query
+from db import get_session
 from schemas.companies import CompanyCreateSchema,  CompanySchema, MemberSchema, RequestSchema, CompanyAlterSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, QuizAnswerSchema, ResultSchema, AverageScoreSchema, LastTimeQuiz, AverageScoreUserSchema
 from services.users import get_user
 from models.users import User
 from services.companies import CompanyCRUD, get_company, RequestCRUD, MemberCRUD, QuizCRUD
-from models.companies import Company, Result
+from models.companies import Company
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
-from sqlalchemy.future import select
 
 company_router = APIRouter()
 
@@ -73,7 +72,7 @@ async def get_members(company: Company = Depends(get_company), user: User = Depe
 
 
 @company_router.get('/companies/join/{id}', response_model=RequestSchema)
-async def invite_user(id: int, user: User = Depends(get_user)) -> RequestSchema:
+async def request_user(id: int, user: User = Depends(get_user)) -> RequestSchema:
     request = await RequestCRUD(user=user).create_request(user_id=user.id, company_id=id, side=True)
     return request
 
@@ -115,7 +114,7 @@ async def guizzes(session: AsyncSession = Depends(get_session), company: Company
 
 
 @company_router.post('/companies/take_quiz/{id}', response_model=ResultSchema)
-async def guizzes(answers: QuizAnswerSchema, quiz_id: int = Query(), session: AsyncSession = Depends(get_session), user: User = Depends(get_user)) -> ResultSchema:
+async def take_guiz(answers: QuizAnswerSchema, quiz_id: int = Query(), session: AsyncSession = Depends(get_session), user: User = Depends(get_user)) -> ResultSchema:
     result = await QuizCRUD(session=session).take_quiz(answers=answers, user=user, quiz_id=quiz_id)
     return result
 

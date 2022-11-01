@@ -31,15 +31,16 @@ services:
       timeout: 30s
       retries: 5
       start_period: 10s
-  fastapiApp:
+  testApp:
     image: fastapiapp
-    container_name: fastapiApp
-    build: .
+    container_name: testApp
+    build:
+      dockerfile: Dockerfile.Test
     ports:
       - ${APP_PORT}:${APP_PORT}
     volumes:
       - ./app:/app
-      - ./alembic:/alembic
+      - ./tests:/tests
     env_file: .env
     healthcheck:
       test: curl localhost:8000
