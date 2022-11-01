@@ -62,4 +62,4 @@ jobs:
           
           docker compose -f compose.yml build $ECR_REGISTRY/$ECR_REPOSITORY
           echo "Pushing image to ECR..."
-          docker compose -f compose.yml push $ECR_REGISTRY/$ECR_REPOSITORY
+          docker compose push $ECR_REGISTRY/$ECR_REPOSITORY
