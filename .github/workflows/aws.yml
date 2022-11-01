@@ -13,13 +13,14 @@ env:
   REDIS_URL: ${{ secrets.REDIS_URL }}
   REDIS_PORT: ${{ secrets.REDIS_PORT }}
   REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-  APP_PORT: 8000
-  APP_HOST: 0.0.0.0
+  APP_PORT: ${{ secrets.APP_PORT }}
+  APP_HOST: ${{ secrets.APP_HOST }}
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   AUTH0_AUDIENCE: ${{ secrets.AUTH0_AUDIENCE }}
   AUTH0_PUBLIC_URL: ${{ secrets.AUTH0_PUBLIC_URL }}
   PYTHONPATH: /app
   ECR_REPOSITORY: meduzzen
+  AWS_REGION: eu-north-1
 jobs:
   Integration:
     runs-on: ubuntu-latest
@@ -48,7 +49,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1
+          aws-region: $AWS_REGION
 
       - name: Login to Amazon ECR
         id: login-ecr
