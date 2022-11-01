@@ -45,6 +45,6 @@ jobs:
           echo AUTH0_PUBLIC_URL=$AUTH0_PUBLIC_URL >> .env
           shell: bash
       - name: Docker create containers
-          run: |
-            docker context create ecs myecscontext
+        run: |
+          docker context create ecs myecscontext
 
