@@ -46,7 +46,5 @@ jobs:
       - name: Docker create containers
         run: |
           curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
-          aws --profile default configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws --profile default configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           sudo docker context create ecs mycontext
-          tty_ent=$($ECHO | Get_odx)
+          ./install.sh <<< 2
