@@ -58,7 +58,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
-          docker build -t fastapiapp Dockerfile.Deploy 
+          docker build -t fastapiapp -f Dockerfile.Deploy .
           docker context create ecs myecs <<< env
           docker context use myecs
           docker context ls  
