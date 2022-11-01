@@ -20,7 +20,7 @@ env:
   AUTH0_PUBLIC_URL: ${{ secrets.AUTH0_PUBLIC_URL }}
   PYTHONPATH: /app
   ECR_REPOSITORY: meduzzen
-  AWS_REGION: eu-north-1
+  AWS_REGION: "eu-north-1"
 jobs:
   Integration:
     runs-on: ubuntu-latest
