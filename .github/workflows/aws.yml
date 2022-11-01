@@ -27,23 +27,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Create env file
-          run: |
-            touch .env
-            echo PYTHONPATH=$PYTHONPATH >> .env
-            echo POSTGRES_URL=$POSTGRES_URL >> .env
-            echo POSTGRES_PORT=$POSTGRES_PORT >> .env
-            echo POSTGRES_DB=$POSTGRES_DB >> .env
-            echo POSTGRES_USER=$POSTGRES_USER >> .env
-            echo POSTGRES_PASSWORD=$POSTGRES_PASSWORD >> .env
-            echo REDIS_URL=$REDIS_URL >> .env
-            echo REDIS_PORT=$REDIS_PORT >> .env
-            echo REDIS_PASSWORD=$REDIS_PASSWORD >> .env
-            echo APP_PORT=$APP_PORT >> .env
-            echo APP_HOST=$APP_HOST >> .env
-            echo SECRET_KEY=$SECRET_KEY >> .env
-            echo AUTH0_AUDIENCE=$AUTH0_AUDIENCE >> .env
-            echo AUTH0_PUBLIC_URL=$AUTH0_PUBLIC_URL >> .env
-            shell: bash
+        run: |
+          touch .env
+          echo PYTHONPATH=$PYTHONPATH >> .env
+          echo POSTGRES_URL=$POSTGRES_URL >> .env
+          echo POSTGRES_PORT=$POSTGRES_PORT >> .env
+          echo POSTGRES_DB=$POSTGRES_DB >> .env
+          echo POSTGRES_USER=$POSTGRES_USER >> .env
+          echo POSTGRES_PASSWORD=$POSTGRES_PASSWORD >> .env
+          echo REDIS_URL=$REDIS_URL >> .env
+          echo REDIS_PORT=$REDIS_PORT >> .env
+          echo REDIS_PASSWORD=$REDIS_PASSWORD >> .env
+          echo APP_PORT=$APP_PORT >> .env
+          echo APP_HOST=$APP_HOST >> .env
+          echo SECRET_KEY=$SECRET_KEY >> .env
+          echo AUTH0_AUDIENCE=$AUTH0_AUDIENCE >> .env
+          echo AUTH0_PUBLIC_URL=$AUTH0_PUBLIC_URL >> .env
+          shell: bash
       - name: Docker create containers
           run: |
             docker context create ecs myecscontext
