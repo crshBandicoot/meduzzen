@@ -28,7 +28,7 @@ services:
       retries: 5
       start_period: 10s
   fastapiApp:
-    image: 365834167077.dkr.ecr.eu-north-1.amazonaws.com/meduzzen:fastapiapp
+    image: fastapiapp
     container_name: fastapiApp
     build:
       dockerfile: Dockerfile.Deploy
