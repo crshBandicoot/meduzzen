@@ -63,4 +63,4 @@ jobs:
           IMAGE_TAG: fastapiApp
         run: |
           docker compose -f "compose.yml" build
-          docker compose push $ECR_REGISTRY/$ECR_REPOSITORY
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:fastapiApp
