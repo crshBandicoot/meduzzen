@@ -28,6 +28,16 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: meduzzen
           IMAGE_TAG: ${{ github.sha }}
+          POSTGRES_URL: postgres
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: db
+          POSTGRES_USER: pguser
+          POSTGRES_PASSWORD: password
+          REDIS_URL: redis/db
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: password
+          APP_PORT: 8000
+          APP_HOST: 0.0.0.0
         run: |
           docker compose -f "compose.yml" build
           echo "Pushing image to ECR..."
