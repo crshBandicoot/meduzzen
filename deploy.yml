@@ -7,8 +7,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: /db/database
-    volumes:
-      - ./db/postgres:/db/postgres
     ports:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
     healthcheck:
@@ -21,8 +19,6 @@ services:
     image: redis
     container_name: redis
     command: redis-server --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - ./db/redis:/db/redis
     ports:
       - ${REDIS_PORT}:${REDIS_PORT}
     healthcheck:
@@ -32,15 +28,12 @@ services:
       retries: 5
       start_period: 10s
   fastapiApp:
-    image: fastapiapp
+    image: 365834167077.dkr.ecr.eu-north-1.amazonaws.com/meduzzen:fastapiapp
     container_name: fastapiApp
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.Deploy
     ports:
       - ${APP_PORT}:${APP_PORT}
-    volumes:
-      - ./app:/app
-      - ./alembic:/alembic
     env_file: .env
     healthcheck:
       test: curl localhost:8000
