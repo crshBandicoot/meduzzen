@@ -11,7 +11,7 @@ services:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
     healthcheck:
       test: pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}
-      interval: 1s
+      interval: 5s
       timeout: 30s
       retries: 5
       start_period: 10s
@@ -23,7 +23,7 @@ services:
       - ${REDIS_PORT}:${REDIS_PORT}
     healthcheck:
       test: redis-cli ping
-      interval: 1s
+      interval: 5s
       timeout: 30s
       retries: 5
       start_period: 10s
