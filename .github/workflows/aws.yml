@@ -46,5 +46,5 @@ jobs:
       - name: Docker create containers
         run: |
           curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
-          sudo docker context create ecs mycontext
-          ./install.sh <<< 2
+          sudo docker context create ecs mycontext <<< env
+
