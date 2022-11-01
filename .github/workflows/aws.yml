@@ -43,7 +43,6 @@ jobs:
           echo SECRET_KEY=$SECRET_KEY >> .env
           echo AUTH0_AUDIENCE=$AUTH0_AUDIENCE >> .env
           echo AUTH0_PUBLIC_URL=$AUTH0_PUBLIC_URL >> .env
-          shell: bash
       - name: Docker create containers
         run: |
           docker context create ecs myecscontext
