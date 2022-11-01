@@ -6,5 +6,5 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy --system
 COPY alembic.ini .
 COPY /alembic /alembic
 COPY /app /app
-COPY /tests/tests.sh .
-CMD /tests.sh
+COPY startup.sh .
+CMD /startup.sh
