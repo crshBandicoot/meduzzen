@@ -43,6 +43,7 @@ jobs:
           AUTH0_AUDIENCE: ${{ secrets.AUTH0_AUDIENCE }}
           AUTH0_PUBLIC_URL: ${{ secrets.AUTH0_PUBLIC_URL }}
         run: |
+          echo ${{ steps.login-ecr.outputs.registry }}
           touch .env
           echo PYTHONPATH=$PYTHONPATH >> .env
           echo POSTGRES_URL=$POSTGRES_URL >> .env
@@ -60,6 +61,5 @@ jobs:
           echo AUTH0_PUBLIC_URL=$AUTH0_PUBLIC_URL >> .env
           docker compose -f compose.yml build
           echo "Pushing image to ECR..."
-          echo $ECR_REGISTRY
           docker compose -f compose.yml push $ECR_REGISTRY/$ECR_REPOSITORY
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
