@@ -1,0 +1,20 @@
+services:
+  fastapiApp:
+      image: fastapiapp
+      container_name: fastapiApp
+      build:
+        dockerfile: Dockerfile.Deploy
+      ports:
+        - ${APP_PORT}:${APP_PORT}
+      env_file: .env
+      healthcheck:
+        test: curl localhost:8000
+        interval: 1m
+        timeout: 30s
+        retries: 5
+        start_period: 10s
+      depends_on:
+        postgres:
+          condition: service_healthy
+        redis:
+          condition: service_healthy
