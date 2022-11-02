@@ -7,19 +7,5 @@ COPY alembic.ini .
 COPY /alembic /alembic
 COPY /app /app
 COPY startup.sh .
-EXPOSE 8000
-ENV PYTHONPATH=/app
-ENV POSTGRES_URL=fastapipostgres.ccfvg6rojc9x.eu-north-1.rds.amazonaws.com
-ENV POSTGRES_PORT=5432
-ENV POSTGRES_DB=db
-ENV POSTGRES_USER=pguser
-ENV POSTGRES_PASSWORD=password
-ENV REDIS_URL=clustercfg.fastapiredis.k9u01u.memorydb.eu-north-1.amazonaws.com/db
-ENV REDIS_PORT=6379
-ENV REDIS_PASSWORD=password
-ENV APP_PORT=8000
-ENV APP_HOST=0.0.0.0
-ENV SECRET_KEY=C5586D15554E6CD31F6FC427BD7D1
-ENV AUTH0_AUDIENCE=pizhukApi
-ENV AUTH0_PUBLIC_URL=https://dev-80odk69r.us.auth0.com/.well-known/jwks.json
+EXPOSE $APP_PORT
 ENTRYPOINT ["sh", "/startup.sh"]
