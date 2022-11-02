@@ -66,7 +66,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
           sudo docker context create ecs myecs <<< env
-          sudo docker context use myecs
-          sudo docker compose -f 'deploy.yml' up
-          sudo docker compose convert
-          sudo docker compose ps
+          docker context use myecs
+          docker compose -f 'deploy.yml' up
+          docker compose convert
+          docker compose ps
