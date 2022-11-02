@@ -6,6 +6,7 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy --system
 COPY alembic.ini .
 COPY /alembic /alembic
 COPY /app /app
+COPY .env .
 EXPOSE $APP_PORT
 COPY startup.sh .
 ENTRYPOINT ["sh", "/startup.sh"]
