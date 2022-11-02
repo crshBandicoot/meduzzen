@@ -80,7 +80,3 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
-      - name: Show service
-        run: |
-          echo ${{ env.ECS_SERVICE }}
-          echo ${{ env.ECS_CLUSTER }}
