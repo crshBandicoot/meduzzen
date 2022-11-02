@@ -63,6 +63,6 @@ jobs:
           curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
           sudo docker context create ecs myecs <<< env
           sudo docker context use myecs
-          docker compose -f 'deploy.yml' up
-          docker compose convert
-          docker compose ps
+          sudo docker compose -f 'deploy.yml' up
+          sudo docker compose convert
+          sudo docker compose ps
