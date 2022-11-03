@@ -15,3 +15,4 @@ async def root():
 
 if __name__ == '__main__':
     startserver('main:app', host=getenv('APP_HOST'), port=int(getenv('APP_PORT')), reload=True, reload_dirs=[getcwd()])
+
