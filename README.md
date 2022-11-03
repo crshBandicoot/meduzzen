@@ -6,3 +6,5 @@ Docker:
     docker compose up --build -d
 Run tests:
     docker compose -f 'compose.tests.yml' up --build --abort-on-container-exit
+Deploy host:
+    http://myenv.eba-drzkqu8p.eu-north-1.elasticbeanstalk.com/
