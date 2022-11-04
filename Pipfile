@@ -19,6 +19,8 @@ requests = "*"
 httpx = "*"
 anyio = "*"
 pyjwt = {extras = ["crypto"], version = "*"}
+python-multipart = "*"
+openpyxl = "*"
 
 [dev-packages]
 

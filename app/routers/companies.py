@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile
 from db import get_session
 from schemas.companies import CompanyCreateSchema,  CompanySchema, MemberSchema, RequestSchema, CompanyAlterSchema, QuizCreateSchema, QuizSchema, QuizAlterSchema, QuizAnswerSchema, ResultSchema, AverageScoreSchema, LastTimeQuiz, AverageScoreUserSchema
 from services.users import get_user
@@ -95,6 +95,12 @@ async def add_quiz(quiz: QuizCreateSchema, company: Company = Depends(get_compan
     return quiz
 
 
+@company_router.post('/companies/quiz_excel/{id}')  # , response_model=QuizSchema)
+async def add_quiz_excel(file: UploadFile, company: Company = Depends(get_company), user: User = Depends(get_user), session: AsyncSession = Depends(get_session)) -> QuizSchema:
+    quizzes = await QuizCRUD(session=session).create_or_update_quiz_excel(company=company, user=user, file=await file.read())
+    return quizzes
+
+
 @company_router.patch('/companies/quiz/{id}', response_model=QuizSchema)
 async def patch_quiz(quiz: QuizAlterSchema, quiz_id: int = Query(), company: Company = Depends(get_company), user: User = Depends(get_user), session: AsyncSession = Depends(get_session)) -> QuizSchema:
     quiz = await QuizCRUD(session=session).patch_quiz(company=company, user=user, quiz=quiz, quiz_id=quiz_id)
@@ -108,13 +114,13 @@ async def delete_quiz(quiz_id: int = Query(), company: Company = Depends(get_com
 
 
 @company_router.get('/companies/quiz_list/{id}', response_model=list[QuizSchema])
-async def guizzes(session: AsyncSession = Depends(get_session), company: Company = Depends(get_company), user: User = Depends(get_user), page: int = Query(default=1)) -> list[QuizSchema]:
+async def quizzes(session: AsyncSession = Depends(get_session), company: Company = Depends(get_company), user: User = Depends(get_user), page: int = Query(default=1)) -> list[QuizSchema]:
     quizzes = await QuizCRUD(session=session).quizzes(company=company, user=user, page=page)
     return quizzes
 
 
 @company_router.post('/companies/take_quiz/{id}', response_model=ResultSchema)
-async def take_guiz(answers: QuizAnswerSchema, quiz_id: int = Query(), session: AsyncSession = Depends(get_session), user: User = Depends(get_user)) -> ResultSchema:
+async def take_quiz(answers: QuizAnswerSchema, quiz_id: int = Query(), session: AsyncSession = Depends(get_session), user: User = Depends(get_user)) -> ResultSchema:
     result = await QuizCRUD(session=session).take_quiz(answers=answers, user=user, quiz_id=quiz_id)
     return result
 
