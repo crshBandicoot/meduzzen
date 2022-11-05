@@ -14,7 +14,9 @@ from datetime import datetime
 from pickle import dumps, loads
 from io import StringIO
 from csv import writer, QUOTE_NONNUMERIC
-from typing import Iterator, Optional
+from typing import Iterator, Optional, BinaryIO
+from openpyxl import load_workbook
+from io import BytesIO
 
 
 class CompanyCRUD:
@@ -238,8 +240,8 @@ class QuizCRUD:
 
     async def create_quiz(self, company: Company, user: User, quiz: QuizCreateSchema) -> QuizSchema:
         if company.owner_id != user.id:
-            member = await self.session.get(Member, user.id)
-            if member.company_id != company.id or member.admin != True:
+            member = await self.session.get(Member, {'company_id': company.id, 'user_id': user.id})
+            if not member or not member.admin:
                 raise HTTPException(404, "you can't add quizzes to other's companies")
         db_quiz = await self.session.execute(select(Quiz).filter(Quiz.name == quiz.name))
         db_quiz = db_quiz.scalars().first()
@@ -250,10 +252,49 @@ class QuizCRUD:
         await self.session.commit()
         return QuizSchema(id=db_quiz.id, name=db_quiz.name, description=db_quiz.description, frequency=db_quiz.frequency, quiz=db_quiz.quiz, company_id=company.id)
 
+    async def create_or_update_quiz_excel(self, company: Company, user: User, file: BinaryIO) -> QuizSchema:
+        if company.owner_id != user.id:
+            member = await self.session.get(Member, {'company_id': company.id, 'user_id': user.id})
+            if not member or not member.admin:
+                raise HTTPException(404, "you can't add or edit quizzes to other's companies")
+        try:
+            quiz_excel = load_workbook(BytesIO(file))
+            quiz_excel = list(quiz_excel[quiz_excel.sheetnames[0]])
+            name = quiz_excel[0][0].value
+            description = quiz_excel[1][0].value
+            frequency = int(quiz_excel[2][0].value)
+            questions = []
+            answer_options = []
+            correct_answers = []
+            for question in quiz_excel[3]:
+                questions.append(question.value)
+            for option_list in quiz_excel[4:-1]:
+                options = []
+                for option in option_list:
+                    options.append(option.value)
+                answer_options.append(options)
+            for answer in quiz_excel[-1]:
+                correct_answers.append(int(answer.value))
+            quiz = QuizCreateSchema(name=name, description=description, frequency=frequency, questions=questions, answer_options=answer_options, correct_answers=correct_answers)
+        except:
+            raise HTTPException('Invalid excel file!')
+        db_quiz = await self.session.execute(select(Quiz).filter(Quiz.name == name))
+        db_quiz = db_quiz.scalars().first()
+        if db_quiz:
+            db_quiz.description = description
+            db_quiz.frequency = frequency
+            db_quiz.quiz = {'questions': questions, 'answer_options': answer_options, 'correct_answers': correct_answers}
+            await self.session.commit()
+        else:
+            db_quiz = Quiz(name=name, description=description, frequency=frequency, quiz={'questions': questions, 'answer_options': answer_options, 'correct_answers': correct_answers}, company_id=company.id)
+            self.session.add(db_quiz)
+            await self.session.commit()
+        return QuizSchema(id=db_quiz.id, name=db_quiz.name, description=db_quiz.description, frequency=db_quiz.frequency, quiz=db_quiz.quiz, company_id=company.id)
+
     async def patch_quiz(self, company: Company, user: User, quiz: QuizAlterSchema, quiz_id: int) -> QuizSchema:
         if company.owner_id != user.id:
-            member = await self.session.get(Member, user.id)
-            if member.company_id != company.id or member.admin != True:
+            member = await self.session.get(Member, {'company_id': company.id, 'user_id': user.id})
+            if not member or not member.admin:
                 raise HTTPException(404, "you can't edit other's quizzes")
 
         db_quiz = await self.session.get(Quiz, quiz_id)
@@ -271,8 +312,8 @@ class QuizCRUD:
 
     async def quizzes(self, company: Company, user: User, page: int) -> list[QuizSchema]:
         if company.owner_id != user.id:
-            member = await self.session.get(Member, user.id)
-            if member.company_id != company.id or member.admin != True:
+            member = await self.session.get(Member, {'company_id': company.id, 'user_id': user.id})
+            if not member:
                 raise HTTPException(404, "you can't see other's quizzes")
         params = Params(page=page, size=10)
         quizzes = await paginate(self.session, select(Quiz).filter(Quiz.company_id == company.id), params=params)
@@ -280,9 +321,9 @@ class QuizCRUD:
 
     async def delete_quiz(self, company: Company, user: User, quiz_id: int) -> QuizSchema:
         if company.owner_id != user.id:
-            member = await self.session.get(Member, user.id)
-            if member.company_id != company.id or member.admin != True:
-                raise HTTPException(404, "you can't edit other's quizzes")
+            member = await self.session.get(Member, {'company_id': company.id, 'user_id': user.id})
+            if not member or not member.admin:
+                raise HTTPException(404, "you can't delete other's quizzes")
         db_quiz = await self.session.get(Quiz, quiz_id)
         if db_quiz:
             await self.session.delete(db_quiz)
@@ -348,8 +389,8 @@ class QuizCRUD:
 
     async def dump_results_company(self, user: User, company: Company, user_id: Optional[int] = None, quiz_id: Optional[int] = None) -> Iterator:
         if company.owner_id != user.id:
-            member = await self.session.get(Member, user.id)
-            if member.company_id != company.id or member.admin != True:
+            member = await self.session.get(Member, {'company_id': company.id, 'user_id': user.id})
+            if not member or not member.admin:
                 raise HTTPException(404, "you can't dump other's results")
         if user_id and quiz_id:
             results = await self.session.execute(select(Result).filter(Result.user_id == user_id, Result.quiz_id == quiz_id, Result.company_id == company.id))
@@ -370,8 +411,8 @@ class QuizCRUD:
 
     async def dump_answers_company(self, user: User, company: Company, user_id: Optional[int] = None, quiz_id: Optional[int] = None) -> Iterator:
         if company.owner_id != user.id:
-            member = await self.session.get(Member, user.id)
-            if member.company_id != company.id or member.admin != True:
+            member = await self.session.get(Member, {'company_id': company.id, 'user_id': user.id})
+            if not member or not member.admin:
                 raise HTTPException(404, "you can't dump other's results")
         if user_id and quiz_id:
             db_keys = redis.scan_iter(f'{user_id}-{quiz_id}-{company.id}-*')
@@ -397,8 +438,8 @@ class QuizCRUD:
 
     async def average_score_company(self, user: User, company: Company, user_id: Optional[int]) -> list[AverageScoreSchema]:
         if company.owner_id != user.id:
-            member = await self.session.get(Member, user.id)
-            if member.company_id != company.id or member.admin != True:
+            member = await self.session.get(Member, {'company_id': company.id, 'user_id': user.id})
+            if not member or not member.admin:
                 raise HTTPException(404, "you can't see other's results")
         if user_id:
             scores = await self.session.execute(select(Result).filter(Result.company_id == company.id, Result.user_id == user_id))
@@ -419,8 +460,8 @@ class QuizCRUD:
 
     async def last_time_quiz(self, user: User, company: Company) -> list[LastTimeQuiz]:
         if company.owner_id != user.id:
-            member = await self.session.get(Member, user.id)
-            if member.company_id != company.id or member.admin != True:
+            member = await self.session.get(Member, {'company_id': company.id, 'user_id': user.id})
+            if not member or not member.admin:
                 raise HTTPException(404, "you can't see other's results")
         members = await self.session.execute(select(Member).filter(Member.company_id == company.id))
         members = members.scalars().all()

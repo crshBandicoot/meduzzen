@@ -1,4 +1,4 @@
-from os import getcwd, getenv
+from os import getenv
 from fastapi import FastAPI
 from uvicorn import run as startserver
 from config import configure
@@ -14,5 +14,4 @@ async def root():
 
 
 if __name__ == '__main__':
-    startserver('main:app', host=getenv('APP_HOST'), port=int(getenv('APP_PORT')), reload=True, reload_dirs=[getcwd()])
-
+    startserver('main:app', host=getenv('APP_HOST'), port=int(getenv('APP_PORT')), reload=True)
